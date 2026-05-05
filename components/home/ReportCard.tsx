@@ -1,9 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toArabicNumerals } from '@/lib/utils';
+
+interface Metrics {
+  attendance: number;
+  resilience: number;
+  urgesTotal: number;
+  sessions: number;
+  moodAvg: number | null;
+  journalCount: number;
+}
 
 export function ReportCard() {
   const router = useRouter();
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+
+  useEffect(() => {
+    fetch('/api/analysis')
+      .then((r) => r.json())
+      .then((d) => { if (d.metrics) setMetrics(d.metrics); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div
@@ -16,7 +35,7 @@ export function ReportCard() {
         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: metrics ? 14 : 14 }}>
         <div
           style={{
             width: 44,
@@ -57,6 +76,52 @@ export function ReportCard() {
           </div>
         </div>
       </div>
+
+      {metrics && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-soft)',
+              borderRadius: 'var(--radius-small)',
+              padding: '10px 12px',
+            }}
+          >
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
+              الحضور هذا الأسبوع
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: metrics.attendance >= 5 ? '#7FA88C' : metrics.attendance >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)' }}>
+              {toArabicNumerals(metrics.attendance)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}>/٧</span>
+            </div>
+          </div>
+
+          {metrics.resilience > 0 && (
+            <div
+              style={{
+                flex: 1,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-soft)',
+                borderRadius: 'var(--radius-small)',
+                padding: '10px 12px',
+              }}
+            >
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
+                تجاوزت
+              </div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#7FA88C' }}>
+                {toArabicNumerals(metrics.resilience)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}> لحظة</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <button
         onClick={() => router.push('/analysis')}
