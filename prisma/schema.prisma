@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// عداد الأيام والـ streaks
+model Streak {
+  id        Int       @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime?
+  duration  Int?
+  isActive  Boolean   @default(true)
+  notes     String?
+  createdAt DateTime  @default(now())
+}
+
+// المذكرات اليومية
+model JournalEntry {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  type      String   // "text" | "voice"
+  content   String   @db.Text
+  audioUrl  String?
+  mood      Int?     // 1-7
+  energy    Int?     // 1-7
+  aiSummary String?  @db.Text
+  aiThemes  String?  // JSON array
+  wordCount Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// تسجيل لحظات الـ urges
+model UrgeLog {
+  id         Int      @id @default(autoincrement())
+  timestamp  DateTime @default(now())
+  intensity  Int      // 1-10
+  trigger    String?  // "stress" | "boredom" | "loneliness" | "late_night" | "social_media" | "other"
+  context    String?  @db.Text
+  outcome    String   // "resisted" | "relapsed" | "distracted"
+  duration   Int?     // بالدقائق
+  aiResponse String?  @db.Text
+  createdAt  DateTime @default(now())
+}
+
+// محادثات مع كلود
+model ChatSession {
+  id        Int           @id @default(autoincrement())
+  mode      String        // "sos" | "journal" | "general"
+  title     String?
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ChatMessage {
+  id        Int         @id @default(autoincrement())
+  sessionId Int
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // "user" | "assistant"
+  content   String      @db.Text
+  tokens    Int?
+  model     String?
+  createdAt DateTime    @default(now())
+}
+
+// التقارير الأسبوعية
+model WeeklyAnalysis {
+  id         Int      @id @default(autoincrement())
+  weekStart  DateTime
+  weekEnd    DateTime
+  weekNumber Int
+  metrics    String   @db.Text // JSON
+  patterns   String   @db.Text // JSON
+  findings   String   @db.Text // JSON
+  aiInsights String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([weekStart])
+}
+
+// خطة الطوارئ المخصصة
+model EmergencyPlan {
+  id             Int      @id @default(autoincrement())
+  contacts       String   @db.Text // JSON
+  actions        String   @db.Text // JSON
+  reminders      String   @db.Text // JSON
+  groundingItems String?  @db.Text // JSON
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+
+// نصائح اليوم
+model DailyTip {
+  id       Int       @id @default(autoincrement())
+  content  String    @db.Text
+  source   String
+  category String    // "neuroscience" | "cbt" | "spiritual" | "practical"
+  shownAt  DateTime?
+}
+
+// إعدادات المستخدم
+model UserSettings {
+  id              Int      @id @default(1)
+  name            String   @default("غيث")
+  timezone        String   @default("Asia/Baghdad")
+  bedtimeHour     Int?     @default(23)
+  reminderEnabled Boolean  @default(true)
+  voiceEnabled    Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+}
+
+// سجل استخدام الـ API
+model UsageLog {
+  id            Int      @id @default(autoincrement())
+  model         String
+  inputTokens   Int
+  outputTokens  Int
+  estimatedCost Float
+  createdAt     DateTime @default(now())
+}

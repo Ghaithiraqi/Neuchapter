@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
+@theme {
+  --color-night-deepest: #050811;
+  --color-night-deep: #080C18;
+  --color-card: #161E33;
+  --color-card-elevated: #1E2843;
+  --color-card-soft: #283354;
+  --color-card-hover: #232E4F;
+  --color-ink-primary: #E8EAF0;
+  --color-ink-secondary: #A8B0C4;
+  --color-ink-muted: #6B7691;
+  --color-ink-faint: #424B62;
+  --color-therapy: #6B95C9;
+  --color-therapy-bright: #8FB3DE;
+  --color-therapy-soft: #4A6E9E;
+  --color-clinical: #7FA88C;
+  --color-clinical-soft: #5C8068;
+  --color-alert-warm: #C99878;
+  --color-alert-soft: #A07556;
+  --font-display: 'Reem Kufi', serif;
+  --font-body: 'Tajawal', sans-serif;
+  --font-elegant: 'Amiri', serif;
+  --font-naskh: 'Noto Naskh Arabic', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --animate-breathe: breathe 8s ease-in-out infinite;
+  --animate-gentle: gentlePulse 4s ease-in-out infinite;
+  --animate-wave: wave 1s ease-in-out infinite;
+  --animate-ring-fill: ringFill 1.5s ease-out;
+  --animate-blink: blink 1.5s ease-in-out infinite;
+  --animate-ring-pulse: ringPulse 2s ease-out infinite;
+  --animate-fade-in: fadeIn 0.6s ease;
+  --animate-tab-fade: tabFade 0.3s ease;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --night-deepest: #050811;
+  --night-deep: #080C18;
+  --card-bg: #161E33;
+  --card-bg-elevated: #1E2843;
+  --card-bg-soft: #283354;
+  --card-hover: #232E4F;
+  --ink-primary: #E8EAF0;
+  --ink-secondary: #A8B0C4;
+  --ink-muted: #6B7691;
+  --ink-faint: #424B62;
+  --therapy-blue: #6B95C9;
+  --therapy-blue-bright: #8FB3DE;
+  --therapy-blue-soft: #4A6E9E;
+  --therapy-blue-glow: rgba(107, 149, 201, 0.25);
+  --clinical-green: #7FA88C;
+  --clinical-green-soft: #5C8068;
+  --alert-warm: #C99878;
+  --alert-soft: #A07556;
+  --border-soft: rgba(168, 176, 196, 0.06);
+  --border-mid: rgba(168, 176, 196, 0.12);
+  --border-strong: rgba(168, 176, 196, 0.2);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes breathe {
+  0%, 100% { transform: scale(0.92); }
+  50% { transform: scale(1.08); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes gentlePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(107, 149, 201, 0.25); }
+  50% { box-shadow: 0 0 0 16px transparent; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes ringFill {
+  from { stroke-dashoffset: 339.292; }
+  to { stroke-dashoffset: var(--ring-offset, 50.89); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(1); opacity: 0.3; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tabFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar { display: none; }
+
+html, body {
+  background: var(--night-deepest);
+  color: var(--ink-primary);
+  font-family: 'Tajawal', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
