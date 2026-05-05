@@ -4,6 +4,15 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'جددني',
   description: 'رحلة العودة لذاتك',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'جددني',
+  },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -11,6 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#6B95C9',
 };
 
 export default function RootLayout({
