@@ -47,20 +47,19 @@ export function WriteTab() {
   return (
     <div
       style={{
-        background: 'var(--night-deepest)',
+        background: 'var(--bg-input)',
         border: '1px solid var(--border-soft)',
-        borderRadius: 14,
-        padding: 18,
+        borderRadius: 'var(--radius-input)',
+        padding: 16,
       }}
     >
       <p
         style={{
-          fontFamily: "'Amiri', serif",
-          fontSize: 16,
-          color: 'var(--ink-secondary)',
-          fontStyle: 'italic',
+          fontFamily: 'var(--font-body)',
+          fontSize: 14,
+          color: 'var(--text-secondary)',
           lineHeight: 1.6,
-          marginBottom: 14,
+          marginBottom: 12,
         }}
       >
         ماذا يحدث في داخلك، الآن؟
@@ -79,13 +78,12 @@ export function WriteTab() {
           overflowY: 'auto',
           background: 'transparent',
           border: 'none',
-          color: 'var(--ink-primary)',
-          fontFamily: "'Tajawal', sans-serif",
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-body)',
           fontSize: 14,
           lineHeight: 1.7,
           resize: 'none',
           outline: 'none',
-          fontWeight: 300,
           display: 'block',
         }}
       />
@@ -93,15 +91,15 @@ export function WriteTab() {
       <div
         style={{
           marginTop: 14,
-          paddingTop: 14,
-          borderTop: '1px dashed var(--border-soft)',
+          paddingTop: 12,
+          borderTop: '1px solid var(--border-soft)',
         }}
       >
         {error && (
           <div style={{
             fontSize: 12,
-            color: '#e57373',
-            fontFamily: "'Tajawal', sans-serif",
+            color: 'var(--alert-warm)',
+            fontFamily: 'var(--font-body)',
             marginBottom: 10,
             textAlign: 'center',
           }}>
@@ -110,40 +108,39 @@ export function WriteTab() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div
+          <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: 'var(--ink-muted)',
-              letterSpacing: 0.5,
+              fontFamily: 'var(--font-display)',
+              fontSize: 12,
+              color: 'var(--text-muted)',
             }}
           >
-            {toArabicNumerals(text.length)} · حرف
-          </div>
+            {toArabicNumerals(text.length)} حرف
+          </span>
 
           <button
             onClick={handleSave}
             disabled={saving}
             aria-label="حفظ المذكرة"
             style={{
-              padding: '8px 20px',
+              padding: '9px 24px',
               background: saved
-                ? 'var(--clinical-green)'
+                ? 'rgba(107, 168, 140, 0.3)'
                 : text.length < 10
-                  ? 'rgba(107,149,201,0.15)'
-                  : 'var(--therapy-blue)',
-              border: saved
-                ? 'none'
+                  ? 'var(--gold-faint)'
+                  : 'var(--gold-primary)',
+              border: text.length < 10 ? '1px solid var(--border-mid)' : 'none',
+              borderRadius: 'var(--radius-button)',
+              color: saved
+                ? '#7FA88C'
                 : text.length < 10
-                  ? '1px solid rgba(107,149,201,0.3)'
-                  : 'none',
-              borderRadius: 8,
-              color: text.length < 10 ? 'var(--therapy-blue-soft)' : '#0a0f1a',
-              fontFamily: "'Tajawal', sans-serif",
+                  ? 'var(--text-muted)'
+                  : '#1A3D3D',
+              fontFamily: 'var(--font-body)',
               fontSize: 13,
               fontWeight: 700,
               cursor: text.length < 10 || saving ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.3s ease',
               opacity: saving ? 0.6 : 1,
             }}
           >

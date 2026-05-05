@@ -2,36 +2,31 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { LTR } from '@/components/shared/LTR';
 import { ChatTab } from '@/components/home/ChatTab';
 
 const PROTOCOL_OPTIONS = [
   {
-    step: '01',
+    step: '٠١',
     title: 'تكلّم معي',
     desc: 'محادثة مفتوحة · بلا حكم',
-    time: '~ 5min',
     action: 'chat',
   },
   {
-    step: '02',
+    step: '٠٢',
     title: 'خطتي للحظات الصعبة',
     desc: '٥ خطوات حضّرتها مسبقاً',
-    time: '~ 3min',
     action: 'plan',
   },
   {
-    step: '03',
+    step: '٠٣',
     title: 'تأريض ٥-٤-٣-٢-١',
     desc: 'إعادة الجهاز العصبي للحاضر',
-    time: '~ 4min',
     action: 'grounding',
   },
   {
-    step: '04',
+    step: '٠٤',
     title: 'سجّل ولا تتحرك',
     desc: 'احفظ اللحظة لتحليلها لاحقاً',
-    time: '~ 1min',
     action: 'log',
   },
 ];
@@ -69,37 +64,31 @@ export default function SOSPage() {
         maxWidth: 420,
         margin: '0 auto',
         minHeight: '100vh',
-        background: 'var(--night-deepest)',
+        background: 'linear-gradient(180deg, #1A3D3D 0%, rgba(216, 90, 48, 0.04) 100%)',
         padding: '32px 22px',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
       }}
     >
-      {/* وهج */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'radial-gradient(circle at 50% 30%, rgba(107, 149, 201, 0.06) 0%, transparent 60%)',
-          pointerEvents: 'none',
-        }}
-      />
-
       {/* زر الرجوع */}
       <button
         onClick={() => { setActiveAction(null); router.push('/'); }}
         style={{
           alignSelf: 'flex-start',
-          background: 'none',
-          border: 'none',
-          color: 'var(--ink-muted)',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11,
+          background: 'var(--gold-faint)',
+          border: '1px solid var(--border-mid)',
+          borderRadius: 'var(--radius-button)',
+          color: 'var(--text-secondary)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
           cursor: 'pointer',
-          letterSpacing: 1,
-          marginBottom: 16,
+          padding: '7px 16px',
+          marginBottom: 20,
           zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}
       >
         ← رجوع
@@ -114,41 +103,12 @@ export default function SOSPage() {
           zIndex: 2,
         }}
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            color: 'var(--therapy-blue)',
-            letterSpacing: 2,
-            padding: '6px 14px',
-            border: '1px solid var(--therapy-blue-soft)',
-            borderRadius: 20,
-            marginBottom: 22,
-            background: 'rgba(107, 149, 201, 0.05)',
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              background: 'var(--therapy-blue)',
-              borderRadius: '50%',
-              display: 'inline-block',
-              animation: 'blink 1.5s ease-in-out infinite',
-            }}
-          />
-          <LTR>PROTOCOL · ACTIVE</LTR>
-        </div>
-
         <h1
           style={{
-            fontFamily: "'Noto Naskh Arabic', serif",
-            fontSize: 26,
-            color: 'var(--ink-primary)',
-            marginBottom: 12,
+            fontFamily: 'var(--font-display)',
+            fontSize: 28,
+            color: 'var(--text-primary)',
+            marginBottom: 10,
             fontWeight: 700,
           }}
         >
@@ -157,13 +117,12 @@ export default function SOSPage() {
 
         <p
           style={{
-            fontFamily: "'Amiri', serif",
-            fontSize: 16,
-            color: 'var(--ink-secondary)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 15,
+            color: 'var(--text-secondary)',
             lineHeight: 1.7,
-            maxWidth: 320,
+            maxWidth: 280,
             margin: '0 auto',
-            fontStyle: 'italic',
           }}
         >
           هذه اللحظة موجة. كل موجة تنحسر.
@@ -187,13 +146,14 @@ export default function SOSPage() {
             width: 180,
             height: 180,
             borderRadius: '50%',
-            border: '1px solid var(--therapy-blue-soft)',
-            background: 'var(--card-bg)',
+            border: '1.5px solid var(--gold-deep)',
+            background: 'var(--bg-card)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
             animation: 'breathe 8s ease-in-out infinite',
+            boxShadow: '0 0 40px rgba(232, 184, 114, 0.1)',
           }}
         >
           <div
@@ -201,7 +161,7 @@ export default function SOSPage() {
               position: 'absolute',
               inset: 18,
               borderRadius: '50%',
-              border: '1px solid rgba(107, 149, 201, 0.4)',
+              border: '1px solid var(--border-mid)',
             }}
           />
           <div
@@ -209,30 +169,19 @@ export default function SOSPage() {
               position: 'absolute',
               inset: 44,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, var(--therapy-blue-glow), transparent 70%)',
+              background: 'radial-gradient(circle, var(--gold-faint), transparent 70%)',
             }}
           />
           <div style={{ textAlign: 'center', zIndex: 2 }}>
             <div
               style={{
-                fontFamily: "'Noto Naskh Arabic', serif",
+                fontFamily: 'var(--font-display)',
                 fontSize: 16,
-                color: 'var(--therapy-blue)',
-                letterSpacing: 1,
+                color: 'var(--gold-primary)',
                 fontWeight: 500,
               }}
             >
               شهيق · زفير
-            </div>
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10,
-                color: 'var(--ink-muted)',
-                marginTop: 4,
-              }}
-            >
-              <LTR>8s · cycle</LTR>
             </div>
           </div>
         </div>
@@ -250,17 +199,18 @@ export default function SOSPage() {
           style={{
             position: 'relative',
             zIndex: 2,
-            background: 'var(--card-bg)',
-            borderRadius: 16,
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-card)',
             padding: 20,
             marginBottom: 20,
+            border: '1px solid var(--border-soft)',
           }}
         >
           <h3
             style={{
-              fontFamily: "'Noto Naskh Arabic', serif",
-              fontSize: 16,
-              color: 'var(--ink-primary)',
+              fontFamily: 'var(--font-display)',
+              fontSize: 17,
+              color: 'var(--text-primary)',
               marginBottom: 16,
               fontWeight: 700,
             }}
@@ -280,9 +230,9 @@ export default function SOSPage() {
             >
               <span
                 style={{
-                  fontFamily: "'Amiri', serif",
+                  fontFamily: 'var(--font-display)',
                   fontSize: 28,
-                  color: 'var(--therapy-blue-bright)',
+                  color: 'var(--gold-primary)',
                   fontWeight: 700,
                   width: 36,
                   flexShrink: 0,
@@ -292,9 +242,9 @@ export default function SOSPage() {
               </span>
               <span
                 style={{
-                  fontFamily: "'Noto Naskh Arabic', serif",
+                  fontFamily: 'var(--font-body)',
                   fontSize: 15,
-                  color: 'var(--ink-primary)',
+                  color: 'var(--text-primary)',
                 }}
               >
                 {s.text}
@@ -306,12 +256,12 @@ export default function SOSPage() {
             style={{
               marginTop: 16,
               width: '100%',
-              padding: '10px',
-              background: 'var(--therapy)',
+              padding: '11px',
+              background: 'var(--gold-primary)',
               border: 'none',
-              borderRadius: 10,
-              color: 'var(--night-deepest)',
-              fontFamily: "'Noto Naskh Arabic', serif",
+              borderRadius: 'var(--radius-button)',
+              color: '#1A3D3D',
+              fontFamily: 'var(--font-body)',
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
@@ -327,18 +277,19 @@ export default function SOSPage() {
           style={{
             position: 'relative',
             zIndex: 2,
-            background: 'var(--card-bg)',
-            borderRadius: 16,
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-card)',
             padding: 20,
             marginBottom: 20,
             textAlign: 'center',
+            border: '1px solid var(--border-soft)',
           }}
         >
           <p
             style={{
-              fontFamily: "'Noto Naskh Arabic', serif",
+              fontFamily: 'var(--font-body)',
               fontSize: 15,
-              color: 'var(--ink-secondary)',
+              color: 'var(--text-secondary)',
               lineHeight: 1.7,
             }}
           >
@@ -350,12 +301,12 @@ export default function SOSPage() {
             onClick={() => { setActiveAction(null); setLogDone(false); }}
             style={{
               marginTop: 16,
-              padding: '8px 20px',
-              background: 'var(--therapy)',
+              padding: '9px 28px',
+              background: 'var(--gold-primary)',
               border: 'none',
-              borderRadius: 8,
-              color: 'var(--night-deepest)',
-              fontFamily: "'Noto Naskh Arabic', serif",
+              borderRadius: 'var(--radius-button)',
+              color: '#1A3D3D',
+              fontFamily: 'var(--font-body)',
               fontSize: 13,
               fontWeight: 700,
               cursor: 'pointer',
@@ -368,18 +319,17 @@ export default function SOSPage() {
 
       {/* خيارات البروتوكول */}
       <div style={{ flex: 1, position: 'relative', zIndex: 2 }}>
-        <div
+        <p
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            color: 'var(--ink-muted)',
-            letterSpacing: 2,
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            color: 'var(--text-muted)',
             marginBottom: 14,
             textAlign: 'center',
           }}
         >
           — اختر مساراً —
-        </div>
+        </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {PROTOCOL_OPTIONS.map((opt) => (
@@ -388,11 +338,11 @@ export default function SOSPage() {
               onClick={() => handleAction(opt.action)}
               style={{
                 padding: '16px 18px',
-                background: activeAction === opt.action ? 'var(--card-bg-elevated)' : 'var(--card-bg)',
-                border: `1px solid ${activeAction === opt.action ? 'var(--therapy-blue-soft)' : 'var(--border-soft)'}`,
-                borderRadius: 12,
+                background: activeAction === opt.action ? 'var(--bg-elevated)' : 'var(--bg-card)',
+                border: `1px solid ${activeAction === opt.action ? 'var(--border-strong)' : 'var(--border-soft)'}`,
+                borderRadius: 'var(--radius-small)',
                 cursor: 'pointer',
-                transition: 'all 0.25s',
+                transition: 'all 0.25s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 14,
@@ -401,21 +351,21 @@ export default function SOSPage() {
             >
               <div
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  color: 'var(--therapy-blue)',
-                  fontWeight: 500,
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 14,
+                  color: 'var(--gold-primary)',
+                  fontWeight: 700,
                   width: 32,
                   flexShrink: 0,
                   textAlign: 'center',
                 }}
               >
-                <LTR>{opt.step}</LTR>
+                {opt.step}
               </div>
               <div
                 style={{
                   width: 1,
-                  height: 32,
+                  height: 30,
                   background: 'var(--border-mid)',
                   flexShrink: 0,
                 }}
@@ -423,27 +373,22 @@ export default function SOSPage() {
               <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    fontFamily: "'Noto Naskh Arabic', serif",
+                    fontFamily: 'var(--font-body)',
                     fontSize: 15,
-                    color: 'var(--ink-primary)',
+                    color: 'var(--text-primary)',
                     marginBottom: 3,
                     fontWeight: 500,
                   }}
                 >
                   {opt.title}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--ink-muted)', lineHeight: 1.4 }}>
+                <div style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 12,
+                  color: 'var(--text-muted)',
+                }}>
                   {opt.desc}
                 </div>
-              </div>
-              <div
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 10,
-                  color: 'var(--ink-faint)',
-                }}
-              >
-                <LTR>{opt.time}</LTR>
               </div>
             </button>
           ))}
@@ -458,7 +403,6 @@ interface SOSMessage {
   content: string;
 }
 
-// نسخة محدودة من ChatTab لوضع الطوارئ
 function ChatTabSOS() {
   const [messages, setMessages] = useState<SOSMessage[]>([
     { role: 'assistant', content: 'سمعتك. خذ نفساً عميقاً الآن. أنت تقاوم — هذا شجاعة. أين أنت الآن جسدياً؟' },
@@ -503,10 +447,10 @@ function ChatTabSOS() {
   return (
     <div
       style={{
-        background: 'var(--card-bg)',
-        borderRadius: 16,
+        background: 'var(--bg-card)',
+        borderRadius: 'var(--radius-card)',
         padding: 16,
-        border: '1px solid var(--therapy-blue-soft)',
+        border: '1px solid var(--border-mid)',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 200, overflowY: 'auto', marginBottom: 12 }}>
@@ -514,15 +458,18 @@ function ChatTabSOS() {
           <div
             key={i}
             style={{
-              padding: '10px 12px',
-              borderRadius: 10,
-              background: m.role === 'assistant' ? 'var(--card-bg-elevated)' : 'var(--therapy-soft)',
+              padding: '10px 13px',
+              borderRadius: 16,
+              background: m.role === 'assistant' ? 'var(--bg-elevated)' : 'var(--gold-faint)',
+              border: m.role === 'assistant' ? '1px solid var(--border-soft)' : '1px solid var(--border-mid)',
               fontSize: 13,
-              color: 'var(--ink-primary)',
-              fontFamily: "'Noto Naskh Arabic', serif",
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-body)',
               lineHeight: 1.7,
               alignSelf: m.role === 'assistant' ? 'flex-start' : 'flex-end',
               maxWidth: '90%',
+              borderTopRightRadius: m.role === 'assistant' ? 4 : 16,
+              borderTopLeftRadius: m.role === 'user' ? 4 : 16,
             }}
           >
             {m.content}
@@ -531,7 +478,7 @@ function ChatTabSOS() {
         {loading && (
           <div style={{ display: 'flex', gap: 3, padding: 8 }}>
             {[0, 0.2, 0.4].map((d, i) => (
-              <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--therapy-blue)', animation: `blink 1s ease-in-out ${d}s infinite` }} />
+              <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold-primary)', animation: `blink 1s ease-in-out ${d}s infinite` }} />
             ))}
           </div>
         )}
@@ -551,12 +498,12 @@ function ChatTabSOS() {
           rows={1}
           style={{
             flex: 1,
-            padding: '9px 12px',
-            background: 'var(--night-deepest)',
+            padding: '10px 14px',
+            background: 'var(--bg-input)',
             border: '1px solid var(--border-soft)',
-            borderRadius: 8,
-            color: 'var(--ink-primary)',
-            fontFamily: "'Tajawal', sans-serif",
+            borderRadius: 'var(--radius-input)',
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-body)',
             fontSize: 13,
             outline: 'none',
             resize: 'none',
@@ -569,18 +516,19 @@ function ChatTabSOS() {
         <button
           onClick={send}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            background: 'var(--therapy)',
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            background: 'var(--gold-primary)',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="var(--night-deepest)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="#1A3D3D">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
         </button>

@@ -38,7 +38,6 @@ export function ChatTab() {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
-  // استرجاع الجلسة السابقة عند التحميل
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) { setRestoring(false); return; }
@@ -113,10 +112,10 @@ export function ChatTab() {
   return (
     <div
       style={{
-        background: 'var(--night-deepest)',
+        background: 'var(--bg-input)',
         border: '1px solid var(--border-soft)',
-        borderRadius: 14,
-        padding: 16,
+        borderRadius: 'var(--radius-input)',
+        padding: 14,
         minHeight: 240,
         display: 'flex',
         flexDirection: 'column',
@@ -127,14 +126,15 @@ export function ChatTab() {
         <button
           onClick={startNewChat}
           style={{
-            padding: '5px 12px',
+            padding: '5px 14px',
             background: 'transparent',
-            border: '1px solid var(--border-soft)',
-            borderRadius: 8,
-            color: 'var(--ink-muted)',
-            fontFamily: "'Tajawal', sans-serif",
+            border: '1px solid var(--border-mid)',
+            borderRadius: 'var(--radius-button)',
+            color: 'var(--text-muted)',
+            fontFamily: 'var(--font-body)',
             fontSize: 11,
             cursor: 'pointer',
+            transition: 'all 0.3s ease',
           }}
         >
           محادثة جديدة
@@ -145,7 +145,7 @@ export function ChatTab() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 12,
+          gap: 10,
           flex: 1,
           marginBottom: 14,
           maxHeight: 300,
@@ -153,7 +153,7 @@ export function ChatTab() {
         }}
       >
         {restoring && (
-          <div style={{ textAlign: 'center', color: 'var(--ink-muted)', fontSize: 12, fontFamily: "'Tajawal', sans-serif" }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-body)' }}>
             جاري استرجاع المحادثة...
           </div>
         )}
@@ -163,19 +163,19 @@ export function ChatTab() {
             <div
               style={{
                 maxWidth: '85%',
-                padding: '12px 14px',
-                borderRadius: 14,
+                padding: '11px 14px',
+                borderRadius: 16,
                 fontSize: 13,
                 lineHeight: 1.7,
-                background: msg.role === 'assistant' ? 'var(--card-bg-elevated)' : 'var(--therapy-soft)',
-                border: msg.role === 'assistant' ? '1px solid var(--border-soft)' : 'none',
-                color: 'var(--ink-primary)',
-                fontFamily: msg.role === 'assistant' ? "'Noto Naskh Arabic', serif" : "'Tajawal', sans-serif",
+                background: msg.role === 'assistant' ? 'var(--bg-elevated)' : 'var(--gold-faint)',
+                border: msg.role === 'assistant' ? '1px solid var(--border-soft)' : '1px solid var(--border-mid)',
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-body)',
                 alignSelf: msg.role === 'assistant' ? 'flex-start' : 'flex-end',
                 marginRight: msg.role === 'user' ? 'auto' : undefined,
                 marginLeft: msg.role === 'assistant' ? 'auto' : undefined,
-                borderTopRightRadius: msg.role === 'assistant' ? 4 : 14,
-                borderTopLeftRadius: msg.role === 'user' ? 4 : 14,
+                borderTopRightRadius: msg.role === 'assistant' ? 4 : 16,
+                borderTopLeftRadius: msg.role === 'user' ? 4 : 16,
               }}
             >
               {msg.content}
@@ -183,11 +183,10 @@ export function ChatTab() {
             {msg.time && (
               <div
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 9,
-                  color: 'var(--ink-faint)',
-                  marginTop: 4,
-                  letterSpacing: 0.5,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 10,
+                  color: 'var(--text-muted)',
+                  marginTop: 3,
                   textAlign: msg.role === 'assistant' ? 'right' : 'left',
                   paddingRight: msg.role === 'assistant' ? 4 : 0,
                   paddingLeft: msg.role === 'user' ? 4 : 0,
@@ -208,7 +207,7 @@ export function ChatTab() {
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
-                  background: 'var(--therapy-blue)',
+                  background: 'var(--gold-primary)',
                   animation: `blink 1.5s ease-in-out ${delay}s infinite`,
                 }}
               />
@@ -246,12 +245,11 @@ export function ChatTab() {
         ))}
       </div>
 
-      {/* مؤشر التفريغ */}
       {isProcessing && (
         <div
           style={{
             textAlign: 'center',
-            fontFamily: "'Tajawal', sans-serif",
+            fontFamily: 'var(--font-body)',
             fontSize: 12,
             color: 'var(--alert-warm)',
             marginBottom: 8,
@@ -262,19 +260,18 @@ export function ChatTab() {
         </div>
       )}
 
-      {/* رسائل الخطأ */}
       {voiceStatus === 'error' && voiceError && (
         <div
           style={{
             textAlign: 'center',
-            fontFamily: "'Tajawal', sans-serif",
+            fontFamily: 'var(--font-body)',
             fontSize: 12,
-            color: '#e57373',
+            color: 'var(--alert-warm)',
             marginBottom: 8,
             padding: '6px 12px',
-            background: 'rgba(229, 115, 115, 0.08)',
-            borderRadius: 8,
-            border: '1px solid rgba(229, 115, 115, 0.15)',
+            background: 'var(--alert-glow)',
+            borderRadius: 'var(--radius-small)',
+            border: '1px solid rgba(216, 90, 48, 0.2)',
           }}
         >
           {voiceError}
@@ -286,8 +283,8 @@ export function ChatTab() {
           display: 'flex',
           gap: 8,
           alignItems: 'center',
-          paddingTop: 14,
-          borderTop: '1px dashed var(--border-soft)',
+          paddingTop: 12,
+          borderTop: '1px solid var(--border-soft)',
         }}
       >
         <textarea
@@ -306,11 +303,11 @@ export function ChatTab() {
           style={{
             flex: 1,
             padding: '10px 14px',
-            background: 'var(--card-bg)',
+            background: 'var(--bg-elevated)',
             border: '1px solid var(--border-soft)',
-            borderRadius: 10,
-            color: 'var(--ink-primary)',
-            fontFamily: "'Tajawal', sans-serif",
+            borderRadius: 'var(--radius-input)',
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-body)',
             fontSize: 13,
             outline: 'none',
             resize: 'none',
@@ -332,7 +329,7 @@ export function ChatTab() {
             width: 38,
             height: 38,
             borderRadius: '50%',
-            background: isRecording ? 'rgba(201, 152, 120, 0.12)' : 'transparent',
+            background: isRecording ? 'rgba(216, 90, 48, 0.12)' : 'transparent',
             border: `1.5px solid ${isRecording ? 'var(--alert-warm)' : 'var(--border-strong)'}`,
             display: 'flex',
             alignItems: 'center',
@@ -345,21 +342,19 @@ export function ChatTab() {
             animation: isRecording ? 'gentlePulse 2s ease-in-out infinite' : 'none',
           }}
         >
-          {/* حلقة نبض خارجية أثناء التسجيل */}
           {isRecording && (
             <div
               style={{
                 position: 'absolute',
                 inset: -4,
                 borderRadius: '50%',
-                border: '1px solid var(--alert-soft)',
+                border: '1px solid var(--alert-warm)',
                 opacity: 0.4,
                 animation: 'ringPulse 2s ease-out infinite',
               }}
             />
           )}
 
-          {/* أيقونة إيقاف أثناء التسجيل، مايك في الحالات الأخرى */}
           {isRecording ? (
             <svg width="14" height="14" viewBox="0 0 14 14" fill="var(--alert-warm)">
               <rect x="2" y="2" width="10" height="10" rx="2" />
@@ -371,14 +366,13 @@ export function ChatTab() {
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
-              stroke={voiceStatus === 'error' ? '#e57373' : 'var(--ink-secondary)'}
+              stroke={voiceStatus === 'error' ? 'var(--alert-warm)' : 'var(--text-secondary)'}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
             </svg>
           )}
         </button>
 
-        {/* زر الإرسال — يختفي أثناء التسجيل */}
         {!isRecording && (
           <button
             onClick={sendMessage}
@@ -387,8 +381,8 @@ export function ChatTab() {
             style={{
               width: 38,
               height: 38,
-              borderRadius: 10,
-              background: 'var(--therapy-blue)',
+              borderRadius: '50%',
+              background: 'var(--gold-primary)',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -399,7 +393,7 @@ export function ChatTab() {
               opacity: loading || !input.trim() || isProcessing ? 0.4 : 1,
             }}
           >
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="#0a0f1a">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="#1A3D3D">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
             </svg>
           </button>

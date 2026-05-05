@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { LTR } from './LTR';
 
 export function NavBar() {
   const router = useRouter();
@@ -17,80 +16,73 @@ export function NavBar() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '22px 24px 14px',
+        padding: '16px 20px',
+        height: 64,
+        background: 'var(--bg-deep)',
         position: 'relative',
         zIndex: 2,
       }}
     >
+      {/* شعار + اسم */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div
           style={{
-            width: 28,
-            height: 28,
-            border: '1.5px solid var(--therapy-blue)',
+            width: 30,
+            height: 30,
+            border: '1.5px solid var(--gold-primary)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--card-bg)',
+            background: 'var(--gold-faint)',
           }}
         >
           <div
             style={{
-              width: 8,
-              height: 8,
-              background: 'var(--therapy-blue)',
+              width: 9,
+              height: 9,
+              background: 'var(--gold-primary)',
               borderRadius: '50%',
             }}
           />
         </div>
-        <div>
-          <div
-            style={{
-              fontFamily: "'Noto Naskh Arabic', serif",
-              fontWeight: 700,
-              fontSize: 18,
-              color: 'var(--ink-primary)',
-            }}
-          >
-            جددني
-          </div>
-          <div
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: 'var(--ink-muted)',
-              letterSpacing: 1,
-            }}
-          >
-            <LTR>SESSION · ACTIVE</LTR>
-          </div>
-        </div>
+        <span
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: 20,
+            color: 'var(--text-primary)',
+            letterSpacing: 0.5,
+          }}
+        >
+          جددني
+        </span>
       </div>
 
+      {/* زر القفل الدائري */}
       <button
         onClick={handleLock}
         aria-label="قفل التطبيق"
         style={{
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-soft)',
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: 'var(--gold-faint)',
+          border: '1px solid var(--border-mid)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          transition: 'all 0.3s',
+          transition: 'all 0.3s ease',
         }}
       >
         <svg
-          width="16"
-          height="16"
+          width="15"
+          height="15"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth="2"
-          stroke="var(--ink-secondary)"
+          stroke="var(--text-secondary)"
         >
           <path
             strokeLinecap="round"

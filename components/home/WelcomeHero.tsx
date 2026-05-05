@@ -24,13 +24,11 @@ export function WelcomeHero() {
     setGreeting(getGreeting(now.getHours()));
     setDateStr(formatArabicDate(now));
 
-    // جلب نصيحة اليوم
     fetch('/api/tip')
       .then((r) => r.json())
       .then((d) => { if (d.tip) setTip(d.tip); })
       .catch(() => {});
 
-    // جلب عداد الأيام
     fetch('/api/streak')
       .then((r) => r.json())
       .then((d) => { if (typeof d.days === 'number') setDayNum(d.days); })
@@ -40,143 +38,178 @@ export function WelcomeHero() {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-elevated) 100%)',
-        border: '1px solid var(--border-mid)',
-        borderRadius: 24,
-        padding: '28px 24px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-soft)',
+        borderRadius: 'var(--radius-card)',
+        padding: '22px 20px',
         marginTop: 20,
         marginBottom: 18,
         position: 'relative',
         overflow: 'hidden',
         animation: 'fadeIn 0.6s ease',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
       }}
     >
-      {/* وهج */}
+      {/* وهج ذهبي خفيف في الزاوية */}
       <div
         style={{
           position: 'absolute',
-          top: '-50%',
-          right: '-30%',
-          width: 300,
-          height: 300,
-          background: 'radial-gradient(circle, var(--therapy-blue-glow) 0%, transparent 60%)',
+          top: '-40%',
+          right: '-20%',
+          width: 260,
+          height: 260,
+          background: 'radial-gradient(circle, rgba(232, 184, 114, 0.06) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
 
+      {/* الصف العلوي: التحية + أيقونة البروفايل */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 16,
+          position: 'relative',
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+              color: 'var(--text-secondary)',
+              marginBottom: 4,
+              fontWeight: 400,
+            }}
+          >
+            {greeting}
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 28,
+              color: 'var(--text-primary)',
+              fontWeight: 700,
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            غيث
+          </h2>
+        </div>
+
+        {/* أيقونة البروفايل */}
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: 'var(--gold-faint)',
+            border: '1px solid var(--border-mid)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+        >
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="var(--gold-primary)">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* شريط التاريخ + عداد الأيام */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 18,
+          marginBottom: 16,
           position: 'relative',
         }}
       >
-        <div
+        <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            color: 'var(--ink-muted)',
-            letterSpacing: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
+            fontFamily: 'var(--font-body)',
+            fontSize: 12,
+            color: 'var(--text-muted)',
           }}
         >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              background: 'var(--therapy-blue)',
-              borderRadius: '50%',
-              display: 'inline-block',
-            }}
-          />
           {dateStr}
-        </div>
-        <div
+        </span>
+        <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            color: 'var(--therapy-blue-bright)',
-            letterSpacing: 1,
-            padding: '4px 10px',
-            border: '1px solid var(--therapy-blue-soft)',
-            borderRadius: 6,
-            background: 'rgba(107, 149, 201, 0.05)',
+            fontFamily: 'var(--font-display)',
+            fontSize: 12,
+            color: 'var(--gold-primary)',
+            padding: '3px 12px',
+            border: '1px solid var(--border-mid)',
+            borderRadius: 'var(--radius-button)',
+            background: 'var(--gold-faint)',
           }}
         >
           اليوم {toArabicNumerals(dayNum)}
-        </div>
+        </span>
       </div>
 
-      <div
-        style={{
-          fontFamily: "'Noto Naskh Arabic', serif",
-          fontSize: 26,
-          color: 'var(--ink-primary)',
-          fontWeight: 700,
-          lineHeight: 1.4,
-          marginBottom: 4,
-          position: 'relative',
-        }}
-      >
-        {greeting}، <span style={{ color: 'var(--therapy-blue-bright)' }}>غيث</span>
-      </div>
-
+      {/* فاصل */}
       <div
         style={{
           height: 1,
           background: 'linear-gradient(90deg, transparent, var(--border-mid), transparent)',
-          margin: '20px 0 18px',
+          marginBottom: 16,
           position: 'relative',
         }}
       />
 
+      {/* بطاقة نصيحة اليوم */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 10,
-          color: 'var(--therapy-blue-bright)',
-          letterSpacing: 1.5,
-          marginBottom: 10,
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-soft)',
+          borderRadius: 'var(--radius-small)',
+          padding: '14px 16px',
+          position: 'relative',
         }}
       >
-        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="var(--therapy-blue-bright)">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-        </svg>
-        نصيحة اليوم
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--gold-primary)',
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            marginBottom: 8,
+          }}
+        >
+          نصيحة اليوم
+        </p>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 15,
+            color: 'var(--text-primary)',
+            lineHeight: 1.7,
+            margin: 0,
+          }}
+        >
+          {tip.content}
+        </p>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--text-muted)',
+            marginTop: 10,
+            marginBottom: 0,
+          }}
+        >
+          — {tip.source}
+        </p>
       </div>
-
-      <p
-        style={{
-          fontFamily: "'Amiri', serif",
-          fontSize: 17,
-          color: 'var(--ink-primary)',
-          lineHeight: 1.7,
-          fontStyle: 'italic',
-          position: 'relative',
-        }}
-      >
-        {tip.content}
-      </p>
-
-      <p
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 10,
-          color: 'var(--ink-muted)',
-          letterSpacing: 1,
-          marginTop: 12,
-          position: 'relative',
-        }}
-      >
-        — {tip.source}
-      </p>
     </div>
   );
 }

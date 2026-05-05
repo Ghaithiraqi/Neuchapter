@@ -1,28 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night-deepest: #050811;
-  --color-night-deep: #080C18;
-  --color-card: #161E33;
-  --color-card-elevated: #1E2843;
-  --color-card-soft: #283354;
-  --color-card-hover: #232E4F;
-  --color-ink-primary: #E8EAF0;
-  --color-ink-secondary: #A8B0C4;
-  --color-ink-muted: #6B7691;
-  --color-ink-faint: #424B62;
-  --color-therapy: #6B95C9;
-  --color-therapy-bright: #8FB3DE;
-  --color-therapy-soft: #4A6E9E;
-  --color-clinical: #7FA88C;
-  --color-clinical-soft: #5C8068;
-  --color-alert-warm: #C99878;
-  --color-alert-soft: #A07556;
-  --font-display: 'Reem Kufi', serif;
+  /* Backgrounds */
+  --color-bg-deep: #1A3D3D;
+  --color-bg-card: #1F4747;
+  --color-bg-elevated: #245151;
+  --color-bg-input: #0F2929;
+
+  /* Gold */
+  --color-gold-primary: #E8B872;
+  --color-gold-soft: #F4C97A;
+  --color-gold-deep: #C99850;
+
+  /* Text */
+  --color-text-primary: #F5F1E8;
+  --color-text-secondary: #B8C5C5;
+  --color-text-muted: #6B8080;
+
+  /* Alert */
+  --color-alert-warm: #D85A30;
+
+  /* Fonts */
+  --font-display: 'Playfair Display', 'Reem Kufi', serif;
   --font-body: 'Tajawal', sans-serif;
-  --font-elegant: 'Amiri', serif;
-  --font-naskh: 'Noto Naskh Arabic', serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Animations */
   --animate-breathe: breathe 8s ease-in-out infinite;
   --animate-gentle: gentlePulse 4s ease-in-out infinite;
   --animate-wave: wave 1s ease-in-out infinite;
@@ -34,27 +37,62 @@
 }
 
 :root {
-  --night-deepest: #050811;
-  --night-deep: #080C18;
-  --card-bg: #161E33;
-  --card-bg-elevated: #1E2843;
-  --card-bg-soft: #283354;
-  --card-hover: #232E4F;
-  --ink-primary: #E8EAF0;
-  --ink-secondary: #A8B0C4;
-  --ink-muted: #6B7691;
-  --ink-faint: #424B62;
-  --therapy-blue: #6B95C9;
-  --therapy-blue-bright: #8FB3DE;
-  --therapy-blue-soft: #4A6E9E;
-  --therapy-blue-glow: rgba(107, 149, 201, 0.25);
-  --clinical-green: #7FA88C;
-  --clinical-green-soft: #5C8068;
-  --alert-warm: #C99878;
-  --alert-soft: #A07556;
-  --border-soft: rgba(168, 176, 196, 0.06);
-  --border-mid: rgba(168, 176, 196, 0.12);
-  --border-strong: rgba(168, 176, 196, 0.2);
+  /* Backgrounds */
+  --bg-deep: #1A3D3D;
+  --bg-card: #1F4747;
+  --bg-elevated: #245151;
+  --bg-input: #0F2929;
+
+  /* Gold */
+  --gold-primary: #E8B872;
+  --gold-soft: #F4C97A;
+  --gold-deep: #C99850;
+  --gold-muted: rgba(232, 184, 114, 0.15);
+  --gold-faint: rgba(232, 184, 114, 0.08);
+
+  /* Text */
+  --text-primary: #F5F1E8;
+  --text-secondary: #B8C5C5;
+  --text-muted: #6B8080;
+
+  /* Borders */
+  --border-soft: rgba(232, 184, 114, 0.12);
+  --border-mid: rgba(232, 184, 114, 0.2);
+  --border-strong: rgba(232, 184, 114, 0.35);
+
+  /* Fonts */
+  --font-display: 'Playfair Display', 'Reem Kufi', serif;
+  --font-body: 'Tajawal', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radii */
+  --radius-card: 24px;
+  --radius-button: 50px;
+  --radius-input: 16px;
+  --radius-small: 12px;
+
+  /* Alert */
+  --alert-warm: #D85A30;
+  --alert-glow: rgba(216, 90, 48, 0.15);
+
+  /* Legacy aliases — keep so unmodified components still work */
+  --night-deepest: #1A3D3D;
+  --night-deep: #1F4747;
+  --card-bg: #1F4747;
+  --card-bg-elevated: #245151;
+  --card-bg-soft: #245151;
+  --card-hover: #2A5B5B;
+  --ink-primary: #F5F1E8;
+  --ink-secondary: #B8C5C5;
+  --ink-muted: #6B8080;
+  --ink-faint: rgba(232, 184, 114, 0.2);
+  --therapy-blue: #E8B872;
+  --therapy-blue-bright: #F4C97A;
+  --therapy-blue-soft: #C99850;
+  --therapy-blue-glow: rgba(232, 184, 114, 0.2);
+  --clinical-green: #B8C5C5;
+  --clinical-green-soft: #6B8080;
+  --alert-soft: #B04820;
 }
 
 @keyframes breathe {
@@ -63,7 +101,7 @@
 }
 
 @keyframes gentlePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(107, 149, 201, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 184, 114, 0.25); }
   50% { box-shadow: 0 0 0 16px transparent; }
 }
 
@@ -105,8 +143,8 @@
 *::-webkit-scrollbar { display: none; }
 
 html, body {
-  background: var(--night-deepest);
-  color: var(--ink-primary);
+  background: var(--bg-deep);
+  color: var(--text-primary);
   font-family: 'Tajawal', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;

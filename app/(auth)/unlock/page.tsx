@@ -66,29 +66,30 @@ export default function UnlockPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '40px 30px',
-        background: 'var(--night-deepest)',
+        background: 'var(--bg-deep)',
       }}
     >
-      {/* الشعار */}
+      {/* شعار دائري ذهبي */}
       <div
         style={{
-          width: 56,
-          height: 56,
-          border: '2px solid var(--therapy-blue)',
+          width: 64,
+          height: 64,
+          border: '2px solid var(--gold-primary)',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 24,
-          background: 'var(--card-bg)',
+          marginBottom: 20,
+          background: 'var(--gold-faint)',
           animation: 'gentlePulse 4s ease-in-out infinite',
+          boxShadow: '0 0 24px rgba(232, 184, 114, 0.15)',
         }}
       >
         <div
           style={{
-            width: 16,
-            height: 16,
-            background: 'var(--therapy-blue)',
+            width: 20,
+            height: 20,
+            background: 'var(--gold-primary)',
             borderRadius: '50%',
           }}
         />
@@ -96,11 +97,12 @@ export default function UnlockPage() {
 
       <h1
         style={{
-          fontFamily: "'Noto Naskh Arabic', serif",
-          fontSize: 32,
-          color: 'var(--ink-primary)',
+          fontFamily: 'var(--font-display)',
+          fontSize: 34,
+          color: 'var(--text-primary)',
           marginBottom: 8,
           fontWeight: 700,
+          letterSpacing: 1,
         }}
       >
         جددني
@@ -108,14 +110,14 @@ export default function UnlockPage() {
 
       <p
         style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11,
-          color: 'var(--ink-muted)',
-          letterSpacing: 2,
-          marginBottom: 64,
+          fontFamily: 'var(--font-body)',
+          fontSize: 14,
+          color: 'var(--text-secondary)',
+          marginBottom: 52,
+          letterSpacing: 0.5,
         }}
       >
-        <LTR>SESSION · LOCKED</LTR>
+        رحلة العودة لذاتك
       </p>
 
       {/* نقاط الرمز */}
@@ -123,7 +125,7 @@ export default function UnlockPage() {
         style={{
           display: 'flex',
           gap: 18,
-          marginBottom: 56,
+          marginBottom: 44,
           animation: error ? 'shake 0.3s ease' : 'none',
         }}
       >
@@ -131,14 +133,14 @@ export default function UnlockPage() {
           <div
             key={i}
             style={{
-              width: 12,
-              height: 12,
+              width: 13,
+              height: 13,
               borderRadius: '50%',
-              border: `1.5px solid ${passcode.length > i ? 'var(--therapy-blue)' : 'var(--ink-muted)'}`,
-              background: passcode.length > i ? 'var(--therapy-blue)' : 'transparent',
+              border: `1.5px solid ${passcode.length > i ? 'var(--gold-primary)' : 'var(--text-muted)'}`,
+              background: passcode.length > i ? 'var(--gold-primary)' : 'transparent',
               boxShadow:
-                passcode.length > i ? '0 0 12px var(--therapy-blue-glow)' : 'none',
-              transition: 'all 0.3s',
+                passcode.length > i ? '0 0 10px rgba(232, 184, 114, 0.5)' : 'none',
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
@@ -151,7 +153,7 @@ export default function UnlockPage() {
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 14,
           width: '100%',
-          maxWidth: 280,
+          maxWidth: 264,
         }}
       >
         {keys.map((key, i) => {
@@ -169,19 +171,34 @@ export default function UnlockPage() {
               }}
               disabled={isEmpty || loading}
               style={{
-                aspectRatio: '1',
-                borderRadius: 14,
-                background: isEmpty ? 'transparent' : 'var(--card-bg)',
-                border: isEmpty ? 'none' : '1px solid var(--border-soft)',
-                color: 'var(--ink-primary)',
-                fontFamily: "'Noto Naskh Arabic', serif",
-                fontSize: isDelete ? 18 : 22,
-                fontWeight: 500,
+                width: 60,
+                height: 60,
+                margin: '0 auto',
+                borderRadius: 16,
+                background: isEmpty ? 'transparent' : 'var(--gold-faint)',
+                border: isEmpty ? 'none' : '1px solid var(--border-mid)',
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-display)',
+                fontSize: isDelete ? 18 : 24,
+                fontWeight: 600,
                 cursor: isEmpty ? 'default' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.15s',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isEmpty) {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold-muted)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-strong)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isEmpty) {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold-faint)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-mid)';
+                }
               }}
             >
               {key}
@@ -194,13 +211,13 @@ export default function UnlockPage() {
         <p
           style={{
             marginTop: 24,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 11,
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
             color: 'var(--alert-warm)',
-            letterSpacing: 1,
+            letterSpacing: 0.5,
           }}
         >
-          رمز خاطئ
+          رمز خاطئ، حاول مجدداً
         </p>
       )}
 

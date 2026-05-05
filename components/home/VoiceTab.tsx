@@ -79,7 +79,7 @@ export function VoiceTab() {
   }[status];
 
   const statusHint = {
-    idle: '',
+    idle: 'مدّة قصوى ٥ دقائق',
     recording: 'اضغط للإيقاف',
     processing: 'لحظة...',
     done: 'تم الحفظ تلقائياً',
@@ -89,24 +89,24 @@ export function VoiceTab() {
   return (
     <div
       style={{
-        background: 'var(--night-deepest)',
+        background: 'var(--bg-input)',
         border: '1px solid var(--border-soft)',
-        borderRadius: 14,
-        padding: '28px 18px',
+        borderRadius: 'var(--radius-input)',
+        padding: '24px 18px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 18,
+        gap: 16,
       }}
     >
       <p
         style={{
-          fontFamily: "'Amiri', serif",
-          fontSize: 15,
-          color: 'var(--ink-secondary)',
-          fontStyle: 'italic',
+          fontFamily: 'var(--font-body)',
+          fontSize: 14,
+          color: 'var(--text-secondary)',
           textAlign: 'center',
           lineHeight: 1.6,
+          margin: 0,
         }}
       >
         تكلّم بصوتك. سيُحوَّل لنص ويُحلَّل لاحقاً.
@@ -119,14 +119,17 @@ export function VoiceTab() {
           width: 90,
           height: 90,
           borderRadius: '50%',
-          background: isRecording ? 'rgba(201, 152, 120, 0.15)' : 'var(--card-bg-elevated)',
-          border: `2px solid ${isRecording ? 'var(--alert-warm)' : 'var(--therapy-blue)'}`,
+          background: isRecording ? 'rgba(216, 90, 48, 0.12)' : 'var(--gold-faint)',
+          border: `2px solid ${isRecording ? 'var(--alert-warm)' : 'var(--gold-primary)'}`,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          transition: 'all 0.3s',
+          transition: 'all 0.3s ease',
+          boxShadow: isRecording
+            ? '0 0 20px rgba(216, 90, 48, 0.2)'
+            : '0 0 20px rgba(232, 184, 114, 0.15)',
         }}
       >
         {isRecording && (
@@ -135,7 +138,7 @@ export function VoiceTab() {
               position: 'absolute',
               inset: -5,
               borderRadius: '50%',
-              border: '1px solid var(--alert-soft)',
+              border: '1px solid var(--alert-warm)',
               opacity: 0.3,
               animation: 'ringPulse 2s ease-out infinite',
             }}
@@ -147,7 +150,7 @@ export function VoiceTab() {
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth="2"
-          stroke={isRecording ? 'var(--alert-warm)' : 'var(--therapy-blue)'}
+          stroke={isRecording ? 'var(--alert-warm)' : 'var(--gold-primary)'}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
         </svg>
@@ -156,9 +159,9 @@ export function VoiceTab() {
       <div style={{ textAlign: 'center' }}>
         <div
           style={{
-            fontFamily: "'Noto Naskh Arabic', serif",
+            fontFamily: 'var(--font-body)',
             fontSize: 14,
-            color: 'var(--ink-primary)',
+            color: 'var(--text-primary)',
             marginBottom: 4,
             fontWeight: 500,
           }}
@@ -167,13 +170,12 @@ export function VoiceTab() {
         </div>
         <div
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            color: 'var(--ink-muted)',
-            letterSpacing: 0.5,
+            fontFamily: 'var(--font-body)',
+            fontSize: 12,
+            color: 'var(--text-muted)',
           }}
         >
-          {statusHint || 'مدّة قصوى ٥ دقائق'}
+          {statusHint}
         </div>
       </div>
 
@@ -194,7 +196,7 @@ export function VoiceTab() {
             key={i}
             style={{
               width: 2,
-              background: 'var(--therapy-blue)',
+              background: 'var(--gold-primary)',
               borderRadius: 1,
               animation: `wave 1s ease-in-out ${delay}s infinite`,
               height: [8, 14, 20, 12, 16, 10, 18][i],
@@ -207,12 +209,13 @@ export function VoiceTab() {
         <div style={{ width: '100%' }}>
           <div
             style={{
-              background: 'var(--card-bg)',
-              borderRadius: 10,
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-soft)',
+              borderRadius: 'var(--radius-small)',
               padding: '12px 14px',
-              fontFamily: "'Tajawal', sans-serif",
+              fontFamily: 'var(--font-body)',
               fontSize: 13,
-              color: 'var(--ink-secondary)',
+              color: 'var(--text-primary)',
               lineHeight: 1.7,
               marginBottom: 10,
             }}
@@ -221,29 +224,29 @@ export function VoiceTab() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{
+            <span style={{
               fontSize: 12,
-              fontFamily: "'Tajawal', sans-serif",
-              color: saveState === 'saved' ? 'var(--clinical-green)'
-                : saveState === 'error' ? '#e57373'
-                : 'var(--ink-muted)',
+              fontFamily: 'var(--font-body)',
+              color: saveState === 'saved' ? '#7FA88C'
+                : saveState === 'error' ? 'var(--alert-warm)'
+                : 'var(--text-muted)',
             }}>
               {saveState === 'saved' ? 'تم الحفظ ✓'
                 : saveState === 'saving' ? 'جاري الحفظ...'
                 : saveState === 'error' ? 'فشل الحفظ'
                 : ''}
-            </div>
+            </span>
 
             {saveState === 'error' && (
               <button
                 onClick={() => saveTranscript(transcript)}
                 style={{
-                  padding: '7px 16px',
-                  background: 'var(--therapy-blue)',
+                  padding: '7px 20px',
+                  background: 'var(--gold-primary)',
                   border: 'none',
-                  borderRadius: 8,
-                  color: '#0a0f1a',
-                  fontFamily: "'Tajawal', sans-serif",
+                  borderRadius: 'var(--radius-button)',
+                  color: '#1A3D3D',
+                  fontFamily: 'var(--font-body)',
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',

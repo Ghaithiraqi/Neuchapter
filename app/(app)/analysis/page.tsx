@@ -39,7 +39,7 @@ const DEMO_ANALYSIS: Analysis = {
     {
       id: 1,
       type: 'primary',
-      tag: 'PATTERN · 01',
+      tag: 'نمط · ٠١',
       confidence: 87,
       title: '٧٠٪ من اللحظات الصعبة تحدث بين ١٢ منتصف الليل و٣ فجراً',
       explanation:
@@ -49,7 +49,7 @@ const DEMO_ANALYSIS: Analysis = {
     {
       id: 2,
       type: 'success',
-      tag: 'PROGRESS · 02',
+      tag: 'تقدم · ٠٢',
       confidence: 100,
       title: 'ثلاث ليالٍ متتالية تجاوزت فيها لحظات قوية',
       explanation:
@@ -58,7 +58,7 @@ const DEMO_ANALYSIS: Analysis = {
     {
       id: 3,
       type: 'primary',
-      tag: 'PATTERN · 03',
+      tag: 'نمط · ٠٣',
       confidence: 74,
       title: 'الأيام التي تكتب فيها مذكرة، اللحظات الصعبة تنخفض ٤٠٪',
       explanation: 'ارتباط واضح بين التأمل الصباحي والاستقرار خلال اليوم.',
@@ -69,10 +69,10 @@ const DEMO_ANALYSIS: Analysis = {
 };
 
 const METRICS_LABELS: Record<string, string> = {
-  attendance: 'ATTENDANCE',
-  resilience: 'RESILIENCE',
-  sessions: 'SESSIONS',
-  moodAvg: 'MOOD AVG',
+  attendance: 'الحضور',
+  resilience: 'الصمود',
+  sessions: 'الجلسات',
+  moodAvg: 'متوسط المزاج',
 };
 
 export default function AnalysisPage() {
@@ -111,26 +111,27 @@ export default function AnalysisPage() {
       {/* الهيدر */}
       <div
         style={{
-          margin: '20px 0 22px',
-          padding: 22,
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-mid)',
-          borderRadius: 18,
+          margin: '20px 0 18px',
+          padding: '22px 22px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-soft)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
         }}
       >
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
+            alignItems: 'center',
             marginBottom: 14,
           }}
         >
           <div
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: 'var(--ink-muted)',
-              letterSpacing: 1.5,
+              fontFamily: 'var(--font-body)',
+              fontSize: 12,
+              color: 'var(--text-muted)',
             }}
           >
             {data.weekStart
@@ -139,24 +140,24 @@ export default function AnalysisPage() {
           </div>
           <div
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: 'var(--therapy-blue-bright)',
-              padding: '3px 10px',
-              border: '1px solid var(--therapy-blue-soft)',
-              borderRadius: 6,
-              background: 'rgba(107, 149, 201, 0.05)',
+              fontFamily: 'var(--font-display)',
+              fontSize: 12,
+              color: 'var(--gold-primary)',
+              padding: '4px 12px',
+              border: '1px solid var(--border-mid)',
+              borderRadius: 'var(--radius-button)',
+              background: 'var(--gold-faint)',
             }}
           >
-            <LTR>RPT-{String(data.weekNumber).padStart(3, '0')}</LTR>
+            أسبوع {toArabicNumerals(data.weekNumber)}
           </div>
         </div>
 
         <h1
           style={{
-            fontFamily: "'Noto Naskh Arabic', serif",
-            fontSize: 22,
-            color: 'var(--ink-primary)',
+            fontFamily: 'var(--font-display)',
+            fontSize: 24,
+            color: 'var(--text-primary)',
             fontWeight: 700,
             marginBottom: 6,
           }}
@@ -166,13 +167,12 @@ export default function AnalysisPage() {
 
         <p
           style={{
-            fontFamily: "'Amiri', serif",
+            fontFamily: 'var(--font-body)',
             fontSize: 13,
-            color: 'var(--ink-secondary)',
-            fontStyle: 'italic',
+            color: 'var(--text-secondary)',
           }}
         >
-          — تحليل سلوكي مبني على بياناتك —
+          تحليل سلوكي مبني على بياناتك
         </p>
       </div>
 
@@ -183,69 +183,59 @@ export default function AnalysisPage() {
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: 10,
-            marginBottom: 20,
+            marginBottom: 18,
           }}
         >
-          {Object.entries(data.metrics).map(([key, val]) => (
-            <div
-              key={key}
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--border-mid)',
-                borderRadius: 14,
-                padding: 16,
-                position: 'relative',
-              }}
-            >
+          {Object.entries(data.metrics).map(([key, val]) => {
+            const isPositive = key === 'attendance' || key === 'sessions' || key === 'resilience';
+            return (
               <div
+                key={key}
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 2,
-                  height: '100%',
-                  background: 'var(--therapy)',
-                  opacity: 0.4,
-                }}
-              />
-              <div
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 9,
-                  color: 'var(--ink-muted)',
-                  letterSpacing: 1.5,
-                  marginBottom: 10,
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-soft)',
+                  borderRadius: 'var(--radius-small)',
+                  padding: '16px 18px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                 }}
               >
-                <LTR>{METRICS_LABELS[key] ?? key.toUpperCase()}</LTR>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 11,
+                    color: 'var(--text-muted)',
+                    marginBottom: 10,
+                  }}
+                >
+                  {METRICS_LABELS[key] ?? key}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 32,
+                    color: isPositive ? 'var(--gold-soft)' : 'var(--text-primary)',
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  {typeof val === 'number' ? toArabicNumerals(val) : val}
+                </div>
               </div>
-              <div
-                style={{
-                  fontFamily: "'Amiri', serif",
-                  fontSize: 30,
-                  color: 'var(--ink-primary)',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  marginBottom: 8,
-                }}
-              >
-                {typeof val === 'number' ? toArabicNumerals(val) : val}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* الأنماط */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 18 }}>
         {loading ? (
           <div
             style={{
               padding: 40,
               textAlign: 'center',
-              color: 'var(--ink-muted)',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 11,
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
             }}
           >
             جاري التحميل...
@@ -255,11 +245,12 @@ export default function AnalysisPage() {
             <div
               key={pattern.id}
               style={{
-                background: 'var(--card-bg)',
-                border: `1px solid ${pattern.type === 'primary' ? 'var(--therapy-blue-soft)' : 'var(--border-mid)'}`,
-                borderRadius: 14,
+                background: 'var(--bg-card)',
+                border: `1px solid ${pattern.type === 'success' ? 'rgba(107, 168, 140, 0.3)' : 'var(--border-soft)'}`,
+                borderRadius: 'var(--radius-small)',
                 padding: 20,
                 marginBottom: 10,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               }}
             >
               <div
@@ -272,42 +263,35 @@ export default function AnalysisPage() {
               >
                 <div
                   style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    color: pattern.type === 'success' ? 'var(--clinical)' : 'var(--therapy)',
-                    background:
-                      pattern.type === 'success'
-                        ? 'rgba(127, 168, 140, 0.08)'
-                        : 'rgba(107, 149, 201, 0.08)',
-                    padding: '4px 10px',
-                    borderRadius: 4,
-                    letterSpacing: 1.5,
-                    border:
-                      pattern.type === 'success'
-                        ? '1px solid rgba(127, 168, 140, 0.2)'
-                        : '1px solid rgba(107, 149, 201, 0.2)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 11,
+                    color: pattern.type === 'success' ? '#7FA88C' : 'var(--gold-primary)',
+                    background: pattern.type === 'success' ? 'rgba(107, 168, 140, 0.08)' : 'var(--gold-faint)',
+                    padding: '4px 12px',
+                    borderRadius: 'var(--radius-button)',
+                    border: pattern.type === 'success' ? '1px solid rgba(107, 168, 140, 0.2)' : '1px solid var(--border-mid)',
                   }}
                 >
-                  <LTR>{pattern.tag}</LTR>
+                  {pattern.tag}
                 </div>
                 <div
                   style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    color: 'var(--ink-faint)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 11,
+                    color: 'var(--text-muted)',
                   }}
                 >
-                  <LTR>CONFIDENCE · {pattern.confidence}%</LTR>
+                  دقة {toArabicNumerals(pattern.confidence)}٪
                 </div>
               </div>
 
               <h3
                 style={{
-                  fontFamily: "'Noto Naskh Arabic', serif",
+                  fontFamily: 'var(--font-display)',
                   fontSize: 15,
-                  color: 'var(--ink-primary)',
+                  color: 'var(--text-primary)',
                   marginBottom: 10,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   lineHeight: 1.5,
                 }}
               >
@@ -316,11 +300,10 @@ export default function AnalysisPage() {
 
               <p
                 style={{
-                  fontFamily: "'Tajawal', sans-serif",
+                  fontFamily: 'var(--font-body)',
                   fontSize: 13,
-                  color: 'var(--ink-secondary)',
+                  color: 'var(--text-secondary)',
                   lineHeight: 1.8,
-                  fontWeight: 300,
                 }}
               >
                 {pattern.explanation}
@@ -330,34 +313,34 @@ export default function AnalysisPage() {
                 <div
                   style={{
                     marginTop: 14,
-                    paddingTop: 14,
-                    borderTop: '1px dashed var(--border-mid)',
+                    paddingTop: 12,
+                    borderTop: '1px solid var(--border-soft)',
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 8,
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 10,
-                      color: 'var(--therapy)',
-                      letterSpacing: 1,
-                      fontWeight: 500,
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 11,
+                      color: 'var(--gold-primary)',
+                      fontWeight: 600,
                       flexShrink: 0,
                     }}
                   >
-                    <LTR>RX —</LTR>
-                  </div>
-                  <div
+                    التوصية ←
+                  </span>
+                  <span
                     style={{
-                      fontSize: 12,
-                      color: 'var(--ink-secondary)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 13,
+                      color: 'var(--text-secondary)',
                       lineHeight: 1.6,
                     }}
                   >
                     {pattern.recommendation}
-                  </div>
+                  </span>
                 </div>
               )}
             </div>
@@ -372,16 +355,16 @@ export default function AnalysisPage() {
         style={{
           width: '100%',
           padding: '14px',
-          background: generating ? 'var(--card-bg-soft)' : 'var(--therapy)',
-          border: 'none',
-          borderRadius: 12,
-          color: generating ? 'var(--ink-muted)' : 'var(--night-deepest)',
-          fontFamily: "'Noto Naskh Arabic', serif",
+          background: generating ? 'var(--gold-faint)' : 'var(--gold-primary)',
+          border: generating ? '1px solid var(--border-mid)' : 'none',
+          borderRadius: 'var(--radius-button)',
+          color: generating ? 'var(--text-muted)' : '#1A3D3D',
+          fontFamily: 'var(--font-body)',
           fontSize: 15,
           fontWeight: 700,
           cursor: generating ? 'not-allowed' : 'pointer',
           marginBottom: 20,
-          transition: 'all 0.2s',
+          transition: 'all 0.3s ease',
         }}
       >
         {generating ? 'جاري التحليل...' : 'توليد تقرير جديد'}

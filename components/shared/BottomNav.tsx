@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { LTR } from './LTR';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -9,7 +8,7 @@ export function BottomNav() {
 
   const items = [
     {
-      label: 'HOME',
+      label: 'الرئيسية',
       path: '/',
       icon: (
         <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="20" height="20">
@@ -18,7 +17,7 @@ export function BottomNav() {
       ),
     },
     {
-      label: 'REPORT',
+      label: 'تقاريري',
       path: '/analysis',
       icon: (
         <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="20" height="20">
@@ -37,10 +36,9 @@ export function BottomNav() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: 420,
-        background: 'rgba(5, 8, 17, 0.92)',
-        backdropFilter: 'blur(24px)',
-        borderTop: '1px solid var(--border-mid)',
-        padding: '10px 24px 22px',
+        background: 'var(--bg-card)',
+        borderTop: '1px solid var(--border-soft)',
+        padding: '10px 32px 24px',
         display: 'flex',
         justifyContent: 'space-around',
         zIndex: 10,
@@ -57,39 +55,25 @@ export function BottomNav() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 5,
+              gap: 4,
               cursor: 'pointer',
-              padding: '8px 14px',
-              background: 'none',
+              padding: '10px 20px',
+              background: isActive ? 'var(--gold-faint)' : 'transparent',
               border: 'none',
-              position: 'relative',
-              color: isActive ? 'var(--therapy-blue)' : 'var(--ink-muted)',
-              transition: 'all 0.2s',
+              borderRadius: 16,
+              color: isActive ? 'var(--gold-primary)' : 'var(--text-secondary)',
+              transition: 'all 0.3s ease',
             }}
           >
-            {isActive && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: -8,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 24,
-                  height: 2,
-                  background: 'var(--therapy-blue)',
-                  borderRadius: 2,
-                }}
-              />
-            )}
             {item.icon}
             <span
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 9,
-                letterSpacing: 0.5,
+                fontFamily: 'var(--font-body)',
+                fontSize: 11,
+                fontWeight: isActive ? 600 : 400,
               }}
             >
-              <LTR>{item.label}</LTR>
+              {item.label}
             </span>
           </button>
         );
