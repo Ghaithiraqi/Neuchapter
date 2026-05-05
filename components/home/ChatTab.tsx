@@ -24,6 +24,7 @@ export function ChatTab() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [restoring, setRestoring] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const { status: voiceStatus, isRecording, isProcessing, errorMessage: voiceError, toggle: toggleRecording } =
     useVoiceRecorder({
@@ -62,7 +63,10 @@ export function ChatTab() {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   const sendMessage = async () => {
@@ -142,6 +146,7 @@ export function ChatTab() {
       </div>
 
       <div
+        ref={messagesContainerRef}
         style={{
           display: 'flex',
           flexDirection: 'column',
