@@ -14,14 +14,13 @@ export function StreakCircle() {
   }, []);
 
   const milestones = [7, 14, 21, 30, 60, 90, 180, 365];
-  const nextMilestone = milestones.find((m) => m > days) ?? 365;
-  const prevMilestone = milestones.filter((m) => m <= days).pop() ?? 0;
-  const progress = (days - prevMilestone) / (nextMilestone - prevMilestone);
+  const nextMilestone = milestones.find((m) => m >= days) ?? 365;
+  const progress = Math.min(days / nextMilestone, 1);
 
   const r = 34;
   const circumference = 2 * Math.PI * r;
   const offset = circumference - progress * circumference;
-  const remaining = nextMilestone - days;
+  const remaining = Math.max(nextMilestone - days, 0);
   const pct = Math.round(progress * 100);
 
   return (

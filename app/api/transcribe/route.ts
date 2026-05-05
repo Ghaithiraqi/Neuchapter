@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { toFile } from 'openai/uploads';
 
+export const maxDuration = 30;
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
@@ -20,7 +22,8 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await audioFile.arrayBuffer());
-    const file = await toFile(buffer, 'recording.webm', { type: audioFile.type });
+    const ext = audioFile.type.includes('mp4') ? 'mp4' : 'webm';
+    const file = await toFile(buffer, `recording.${ext}`, { type: audioFile.type });
 
     const transcription = await openai.audio.transcriptions.create({
       file,

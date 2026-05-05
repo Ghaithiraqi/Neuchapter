@@ -9,19 +9,22 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const active = await db.streak.findFirst({
+    let active = await db.streak.findFirst({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
 
+    // أنشئ streak تلقائياً عند أول دخول
     if (!active) {
-      return NextResponse.json({ days: 0, streak: null });
+      active = await db.streak.create({
+        data: { startDate: new Date(), isActive: true },
+      });
     }
 
     const now = new Date();
     const days = Math.floor(
       (now.getTime() - active.startDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    ) + 1; // +1 عشان اليوم الأول يعدّ كـ يوم ١
 
     return NextResponse.json({ days, streak: active });
   } catch (err) {

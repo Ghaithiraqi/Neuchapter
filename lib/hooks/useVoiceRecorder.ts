@@ -14,6 +14,7 @@ export function useVoiceRecorder({ onTranscript }: UseVoiceRecorderOptions) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   const startRecording = async () => {
     setErrorMessage(null);
@@ -21,7 +22,12 @@ export function useVoiceRecorder({ onTranscript }: UseVoiceRecorderOptions) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : '';
+      mimeTypeRef.current = mimeType || 'audio/webm';
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
 
@@ -31,7 +37,7 @@ export function useVoiceRecorder({ onTranscript }: UseVoiceRecorderOptions) {
 
       recorder.onstop = async () => {
         setStatus('processing');
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
         const formData = new FormData();
         formData.append('audio', blob, 'recording.webm');
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 export function VoiceTab() {
   const [isRecording, setIsRecording] = useState(false);
@@ -9,6 +9,7 @@ export function VoiceTab() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   const saveTranscript = async (text: string) => {
     setSaveState('saving');
@@ -29,15 +30,22 @@ export function VoiceTab() {
       setTranscript('');
       setSaveState('idle');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : '';
+      mimeTypeRef.current = mimeType || 'audio/webm';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
 
       recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
       recorder.onstop = async () => {
         setStatus('processing');
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+        const ext = mimeTypeRef.current.includes('mp4') ? 'mp4' : 'webm';
         const formData = new FormData();
-        formData.append('audio', blob, 'recording.webm');
+        formData.append('audio', blob, `recording.${ext}`);
 
         try {
           const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
