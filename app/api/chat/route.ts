@@ -1,37 +1,111 @@
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 import Anthropic from '@anthropic-ai/sdk';
-import { NextRequest, NextResponse } from 'next/server';
-import { CHAT_SYSTEM_PROMPT } from '@/lib/prompts/chat';
-import { SOS_SYSTEM_PROMPT } from '@/lib/prompts/sos';
-import { JOURNAL_SYSTEM_PROMPT } from '@/lib/prompts/journal';
+import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
 import { calculateCost } from '@/lib/utils';
+import { getCurrentMilestone } from '@/lib/milestones';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+
+const BASE_PROMPT = `أنت مساعد ذكي وصديق صادق لشخص اسمه غيث في رحلة تعافيه من الإدمان على المواد الإباحية.
+قواعد أساسية:
+١. الصراحة أهم من الإرضاء. لا تتملق.
+٢. عند علامات اكتئاب شديد أو أفكار إيذاء، وجّهه لمصدر بشري.
+٣. تجنب اللغة الواعظة أو الدينية ما لم يبدأ هو.
+٤. التعافي ليس خطاً مستقيماً — الانتكاسات جزء من الرحلة.
+٥. اللهجة: عربي فصيح ودود، ليس رسمياً مبالغاً.`;
+
+async function getSuggestions(userMsg: string, aiResponse: string): Promise<string[]> {
+  try {
+    const res = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 150,
+      messages: [
+        {
+          role: 'user',
+          content: `المستخدم قال: "${userMsg.slice(0, 200)}"\nكلود رد: "${aiResponse.slice(0, 300)}"\nاقترح ٣ ردود قصيرة جداً (٣-٦ كلمات) يمكن للمستخدم قولها. أرجع JSON فقط: {"suggestions":["...","...","..."]}`,
+        },
+      ],
+    });
+    const text = res.content[0].type === 'text' ? res.content[0].text : '{"suggestions":[]}';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return [];
+    const parsed = JSON.parse(match[0]);
+    return (parsed.suggestions ?? []).slice(0, 3) as string[];
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
   if (!authResult.valid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   try {
-    const { mode, sessionId, message } = await req.json();
+    const body = await req.json();
+    const { mode, modePrompt, sessionId, message } = body as {
+      mode?: string;
+      modePrompt?: string;
+      sessionId?: number | null;
+      message: string;
+    };
 
     if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Invalid message' }), { status: 400 });
     }
 
-    const systemPrompt =
-      mode === 'sos'
-        ? SOS_SYSTEM_PROMPT
-        : mode === 'journal'
-          ? JOURNAL_SYSTEM_PROMPT
-          : CHAT_SYSTEM_PROMPT;
+    // ─── تحميل سياق المستخدم بالتوازي ──────────────────────────────────────
+    const [activeStreak, journals, urgesCount] = await Promise.all([
+      db.streak.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }),
+      db.journalEntry.findMany({
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+        select: { content: true, mood: true, createdAt: true },
+      }),
+      db.urgeLog.count({
+        where: { timestamp: { gte: new Date(Date.now() - 7 * 86400000) } },
+      }),
+    ]);
 
-    const model =
-      mode === 'sos' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+    // احتساب أيام الـ streak
+    let streakDays = 0;
+    let milestoneName = '';
+    if (activeStreak) {
+      const now = new Date();
+      const startMs = Date.UTC(
+        activeStreak.startDate.getUTCFullYear(),
+        activeStreak.startDate.getUTCMonth(),
+        activeStreak.startDate.getUTCDate(),
+      );
+      const nowMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      streakDays = Math.floor((nowMs - startMs) / 86_400_000) + 1;
+      milestoneName = getCurrentMilestone(streakDays)?.name ?? '';
+    }
 
+    const moodEntries = journals.filter((j) => j.mood != null);
+    const moodAvg =
+      moodEntries.length > 0
+        ? (moodEntries.reduce((s, j) => s + (j.mood ?? 0), 0) / moodEntries.length).toFixed(1)
+        : null;
+    const lastJournal = journals[0];
+
+    const contextBlock =
+      streakDays > 0
+        ? `\n[سياق المستخدم — استخدمه بحكمة، لا تذكره صراحةً إلا لو طلب السياق]:
+- اليوم الـ ${streakDays} في رحلة التعافي${milestoneName ? ` (${milestoneName})` : ''}
+${moodAvg ? `- متوسط مزاجه هذا الأسبوع: ${moodAvg}/٧` : ''}
+${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocaleDateString('ar')}): "${lastJournal.content.slice(0, 100)}..."` : ''}
+- عدد اللحظات الصعبة هذا الأسبوع: ${urgesCount}`
+        : '';
+
+    const systemPrompt = [modePrompt || BASE_PROMPT, contextBlock].filter(Boolean).join('\n');
+
+    // ─── الجلسة ──────────────────────────────────────────────────────────────
     let session;
     if (sessionId) {
       session = await db.chatSession.findUnique({
@@ -39,60 +113,97 @@ export async function POST(req: NextRequest) {
         include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
       if (!session) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        return new Response(JSON.stringify({ error: 'Session not found' }), { status: 404 });
       }
     } else {
       session = await db.chatSession.create({
-        data: { mode: mode ?? 'general' },
+        data: { mode: mode ?? 'support' },
         include: { messages: true },
       });
     }
 
-    const messages: Array<{ role: 'user' | 'assistant'; content: string }> =
-      session.messages.map((m: { role: string; content: string }) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      }));
-    messages.push({ role: 'user', content: message });
+    const history: Array<{ role: 'user' | 'assistant'; content: string }> = session.messages.map(
+      (m) => ({ role: m.role as 'user' | 'assistant', content: m.content }),
+    );
+    history.push({ role: 'user', content: message });
 
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens: mode === 'sos' ? 200 : 800,
-      system: systemPrompt,
-      messages,
-    });
+    const currentSessionId = session.id;
 
-    const assistantMessage =
-      response.content[0].type === 'text' ? response.content[0].text : '';
+    // ─── ReadableStream (Streaming) ───────────────────────────────────────────
+    const readable = new ReadableStream({
+      async start(controller) {
+        const enc = new TextEncoder();
+        let fullText = '';
 
-    await db.chatMessage.createMany({
-      data: [
-        { sessionId: session.id, role: 'user', content: message },
-        {
-          sessionId: session.id,
-          role: 'assistant',
-          content: assistantMessage,
-          model,
-          tokens: response.usage.output_tokens,
-        },
-      ],
-    });
+        const send = (obj: object) =>
+          controller.enqueue(enc.encode(JSON.stringify(obj) + '\n'));
 
-    await db.usageLog.create({
-      data: {
-        model,
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        estimatedCost: calculateCost(model, response.usage),
+        try {
+          const stream = anthropic.messages.stream({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 800,
+            system: systemPrompt,
+            messages: history,
+          });
+
+          for await (const event of stream) {
+            if (
+              event.type === 'content_block_delta' &&
+              event.delta.type === 'text_delta'
+            ) {
+              fullText += event.delta.text;
+              send({ type: 'delta', text: event.delta.text });
+            }
+          }
+
+          const finalMsg = await stream.finalMessage();
+
+          // حفظ الرسائل + توليد الاقتراحات بالتوازي
+          const [, suggestions] = await Promise.all([
+            db.chatMessage
+              .createMany({
+                data: [
+                  { sessionId: currentSessionId, role: 'user', content: message },
+                  {
+                    sessionId: currentSessionId,
+                    role: 'assistant',
+                    content: fullText,
+                    model: 'claude-sonnet-4-6',
+                    tokens: finalMsg.usage.output_tokens,
+                  },
+                ],
+              })
+              .then(() =>
+                db.usageLog.create({
+                  data: {
+                    model: 'claude-sonnet-4-6',
+                    inputTokens: finalMsg.usage.input_tokens,
+                    outputTokens: finalMsg.usage.output_tokens,
+                    estimatedCost: calculateCost('claude-sonnet-4-6', {
+                      input_tokens: finalMsg.usage.input_tokens,
+                      output_tokens: finalMsg.usage.output_tokens,
+                    }),
+                  },
+                }),
+              ),
+            getSuggestions(message, fullText),
+          ]);
+
+          send({ type: 'done', sessionId: currentSessionId, suggestions });
+        } catch (err) {
+          console.error('Stream error:', err);
+          send({ type: 'error', message: 'حدث خطأ أثناء الاتصال' });
+        } finally {
+          controller.close();
+        }
       },
     });
 
-    return NextResponse.json({
-      sessionId: session.id,
-      message: assistantMessage,
+    return new Response(readable, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (err) {
-    console.error('Chat error:', err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('Chat POST error:', err);
+    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
   }
 }

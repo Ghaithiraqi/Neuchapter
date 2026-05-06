@@ -8,13 +8,16 @@ datasource db {
 
 // عداد الأيام والـ streaks
 model Streak {
-  id        Int       @id @default(autoincrement())
-  startDate DateTime
-  endDate   DateTime?
-  duration  Int?
-  isActive  Boolean   @default(true)
-  notes     String?
-  createdAt DateTime  @default(now())
+  id            Int       @id @default(autoincrement())
+  startDate     DateTime
+  endDate       DateTime?
+  duration      Int?
+  isActive      Boolean   @default(true)
+  notes         String?
+  resetCount    Int       @default(0)
+  relapseDate   DateTime?
+  insuranceUsed Boolean   @default(false)
+  createdAt     DateTime  @default(now())
 }
 
 // المذكرات اليومية
@@ -110,6 +113,15 @@ model UserSettings {
   reminderEnabled Boolean  @default(true)
   voiceEnabled    Boolean  @default(true)
   updatedAt       DateTime @updatedAt
+}
+
+// رسائل محفوظة
+model SavedMessage {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  mode      String?
+  sessionId Int?
+  savedAt   DateTime @default(now())
 }
 
 // سجل استخدام الـ API
