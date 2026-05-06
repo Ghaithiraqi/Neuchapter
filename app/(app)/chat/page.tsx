@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toArabicNumerals } from '@/lib/utils';
+import { useVoiceRecorder } from '@/lib/hooks/useVoiceRecorder';
 
 // ─── Chat Modes ────────────────────────────────────────────────────────────────
 
@@ -218,10 +219,20 @@ function ChatContent() {
   const [showCheckin, setShowCheckin] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
+  const [recordSeconds, setRecordSeconds] = useState(0);
+
+  const { isRecording, isProcessing, errorMessage: voiceError, toggle: toggleVoice } = useVoiceRecorder({
+    onTranscript: (text) => {
+      setInput((prev) => (prev ? prev + ' ' + text : text));
+      inputRef.current?.focus();
+    },
+  });
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrl = useRef<string | null>(null);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentMode = CHAT_MODES.find((m) => m.id === modeId) ?? CHAT_MODES[0];
 
@@ -278,6 +289,31 @@ function ChatContent() {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
+
+  // Recording timer
+  useEffect(() => {
+    if (isRecording) {
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((s) => s + 1);
+      }, 1000);
+    } else {
+      if (recordTimerRef.current) {
+        clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
+      setRecordSeconds(0);
+    }
+    return () => {
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+    };
+  }, [isRecording]);
+
+  const formatTimer = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
 
   // ─── Crisis Detection ─────────────────────────────────────────────────────
   const detectCrisis = async (text: string) => {
@@ -864,6 +900,83 @@ function ChatContent() {
               transition: 'opacity 0.2s',
             }}
           />
+
+          {/* ── Mic button ─────────────────────────────────────────────── */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {isRecording && (
+              <div style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                marginBottom: 4,
+                fontSize: 10,
+                color: '#ef4444',
+                fontFamily: 'var(--font-body)',
+                whiteSpace: 'nowrap',
+                fontWeight: 600,
+              }}>
+                {formatTimer(recordSeconds)}
+              </div>
+            )}
+            {voiceError && !isRecording && (
+              <div style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                marginBottom: 4,
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-body)',
+                whiteSpace: 'nowrap',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-soft)',
+                borderRadius: 6,
+                padding: '3px 6px',
+                maxWidth: 160,
+                textAlign: 'center',
+              }}>
+                {voiceError}
+              </div>
+            )}
+            <button
+              onClick={toggleVoice}
+              disabled={isStreaming}
+              title={isRecording ? 'إيقاف التسجيل' : isProcessing ? 'جاري التحويل...' : 'تسجيل صوتي'}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                background: isRecording ? '#ef4444' : 'var(--gold-faint)',
+                border: `1px solid ${isRecording ? '#ef4444' : 'var(--border-mid)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: isStreaming ? 'not-allowed' : 'pointer',
+                flexShrink: 0,
+                opacity: isStreaming ? 0.5 : 1,
+                transition: 'all 0.2s',
+                animation: isRecording ? 'micPulse 1.5s ease-in-out infinite' : 'none',
+              }}
+            >
+              {isProcessing ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" style={{ animation: 'spin 1s linear infinite' }}>
+                  <circle cx="12" cy="12" r="9" stroke="var(--text-muted)" strokeWidth="2.5" strokeOpacity="0.25" />
+                  <path d="M21 12a9 9 0 00-9-9" stroke="var(--text-secondary)" strokeWidth="2.5" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isRecording ? '#fff' : 'var(--text-secondary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="2" width="6" height="12" rx="3" />
+                  <path d="M5 10a7 7 0 0014 0" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                  <line x1="9" y1="22" x2="15" y2="22" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* ── Send button ─────────────────────────────────────────────── */}
           <button
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
