@@ -10,13 +10,15 @@ import { getCurrentMilestone } from '@/lib/milestones';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-const BASE_PROMPT = `أنت مساعد ذكي وصديق صادق لشخص اسمه غيث في رحلة تعافيه من الإدمان على المواد الإباحية.
+function buildBasePrompt(userName: string): string {
+  return `أنت مساعد ذكي وصديق صادق لشخص اسمه ${userName} في رحلة تعافيه من الإدمان على المواد الإباحية.
 قواعد أساسية:
 ١. الصراحة أهم من الإرضاء. لا تتملق.
 ٢. عند علامات اكتئاب شديد أو أفكار إيذاء، وجّهه لمصدر بشري.
 ٣. تجنب اللغة الواعظة أو الدينية ما لم يبدأ هو.
 ٤. التعافي ليس خطاً مستقيماً — الانتكاسات جزء من الرحلة.
 ٥. اللهجة: عربي فصيح ودود، ليس رسمياً مبالغاً.`;
+}
 
 async function getSuggestions(userMsg: string, aiResponse: string): Promise<string[]> {
   try {
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── تحميل سياق المستخدم بالتوازي ──────────────────────────────────────
-    const [activeStreak, journals, urgesCount] = await Promise.all([
+    const [activeStreak, journals, urgesCount, userSettings] = await Promise.all([
       db.streak.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }),
       db.journalEntry.findMany({
         take: 3,
@@ -70,7 +72,10 @@ export async function POST(req: NextRequest) {
       db.urgeLog.count({
         where: { timestamp: { gte: new Date(Date.now() - 7 * 86400000) } },
       }),
+      db.userSettings.findUnique({ where: { id: 1 }, select: { name: true } }),
     ]);
+
+    const userName = userSettings?.name?.trim() || 'غيث';
 
     // احتساب أيام الـ streak
     let streakDays = 0;
@@ -103,7 +108,7 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
 - عدد اللحظات الصعبة هذا الأسبوع: ${urgesCount}`
         : '';
 
-    const systemPrompt = [modePrompt || BASE_PROMPT, contextBlock].filter(Boolean).join('\n');
+    const systemPrompt = [modePrompt || buildBasePrompt(userName), contextBlock].filter(Boolean).join('\n');
 
     // ─── الجلسة ──────────────────────────────────────────────────────────────
     let session;

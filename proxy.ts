@@ -2,15 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const PUBLIC_PATHS = ['/unlock', '/api/auth/unlock'];
-
 export async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
   const token = req.cookies.get('session')?.value;
 
   if (!token) {
@@ -27,5 +19,6 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|favicon|api/health).*)'],
+  // يستثني: ملفات _next الثابتة، الصور، favicon، صفحة الدخول، مسارات المصادقة، وapi/health
+  matcher: ['/((?!_next/static|_next/image|favicon|unlock|api/auth|api/health).*)'],
 };

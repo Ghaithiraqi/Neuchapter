@@ -46,9 +46,27 @@ export async function DELETE(req: NextRequest) {
   if (!authResult.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    // يقبل id من query param (للتوافق مع /chat) أو من body JSON
     const { searchParams } = new URL(req.url);
-    const id = parseInt(searchParams.get('id') ?? '');
-    if (isNaN(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    let id = parseInt(searchParams.get('id') ?? '');
+
+    if (isNaN(id)) {
+      try {
+        const body = await req.json() as { id?: number };
+        id = typeof body.id === 'number' ? body.id : parseInt(String(body.id ?? ''));
+      } catch {
+        // body غير موجود أو ليس JSON صالح
+      }
+    }
+
+    if (isNaN(id) || id <= 0) {
+      return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    }
+
+    const existing = await db.savedMessage.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
 
     await db.savedMessage.delete({ where: { id } });
     return NextResponse.json({ success: true });
