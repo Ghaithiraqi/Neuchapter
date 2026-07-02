@@ -74,6 +74,18 @@ interface StreakStats {
   days: number;
 }
 
+interface UrgeLog {
+  id: number;
+  timestamp: string;
+  intensity: number;
+  trigger: string | null;
+  outcome: string;
+  context: string | null;
+  duration: number | null;
+}
+
+type UrgeOutcomeFilter = 'all' | 'resisted' | 'relapsed' | 'distracted';
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function TrendBadge({ trend, delta }: { trend: Trend; delta: number | null }) {
@@ -172,6 +184,245 @@ function UrgeTooltip({ active, payload, label }: { active?: boolean; payload?: {
   );
 }
 
+// ─── Urge Log Helpers ────────────────────────────────────────────────────────
+
+const OUTCOME_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  resisted:    { label: 'قاومت',    color: '#7FA88C', bg: 'rgba(107,168,140,0.1)',  border: 'rgba(107,168,140,0.3)' },
+  relapsed:    { label: 'انتكست',   color: 'var(--alert-warm)', bg: 'rgba(216,90,48,0.1)',   border: 'rgba(216,90,48,0.3)' },
+  distracted:  { label: 'تشتّتت',   color: 'var(--text-muted)', bg: 'rgba(107,128,128,0.08)', border: 'rgba(107,128,128,0.2)' },
+};
+
+const TRIGGER_AR: Record<string, string> = {
+  stress:        'ضغط نفسي',
+  boredom:       'ملل',
+  loneliness:    'وحدة',
+  late_night:    'سهر ليلي',
+  social_media:  'تواصل اجتماعي',
+  other:         'أخرى',
+};
+
+const FILTER_TABS: { key: UrgeOutcomeFilter; label: string }[] = [
+  { key: 'all',        label: 'الكل' },
+  { key: 'resisted',   label: 'قاومت' },
+  { key: 'relapsed',   label: 'انتكست' },
+  { key: 'distracted', label: 'تشتّتت' },
+];
+
+function IntensityDots({ value }: { value: number }) {
+  // intensity 1-10 → 5 نقاط، كل نقطة = 2 وحدات
+  const filled = Math.round(value / 2);
+  return (
+    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: i < filled
+              ? filled >= 4 ? 'var(--alert-warm)' : filled >= 3 ? 'var(--gold-primary)' : '#7FA88C'
+              : 'var(--border-mid)',
+            transition: 'background 0.2s',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function UrgeLogSection({
+  logs,
+  total,
+  filter,
+  loading,
+  onFilterChange,
+}: {
+  logs: UrgeLog[];
+  total: number;
+  filter: UrgeOutcomeFilter;
+  loading: boolean;
+  onFilterChange: (f: UrgeOutcomeFilter) => void;
+}) {
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' });
+    const time = d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return { date, time };
+  };
+
+  return (
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-soft)',
+        borderRadius: 'var(--radius-card)',
+        padding: '18px 18px 8px',
+        marginBottom: 18,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      }}
+    >
+      {/* عنوان + عداد */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>
+          سجل اللحظات
+        </div>
+        {total > 0 && (
+          <div
+            style={{
+              fontFamily: 'var(--font-body)', fontSize: 11,
+              color: 'var(--text-muted)',
+              background: 'var(--gold-faint)',
+              border: '1px solid var(--border-soft)',
+              borderRadius: 'var(--radius-button)',
+              padding: '3px 10px',
+            }}
+          >
+            {toArabicNumerals(total)} إجمالاً
+          </div>
+        )}
+      </div>
+
+      {/* أزرار الفلترة */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        {FILTER_TABS.map((tab) => {
+          const isActive = filter === tab.key;
+          const meta = tab.key !== 'all' ? OUTCOME_META[tab.key] : null;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onFilterChange(tab.key)}
+              style={{
+                padding: '5px 14px',
+                borderRadius: 'var(--radius-button)',
+                border: isActive
+                  ? `1px solid ${meta?.border ?? 'var(--border-strong)'}`
+                  : '1px solid var(--border-soft)',
+                background: isActive
+                  ? (meta?.bg ?? 'var(--gold-faint)')
+                  : 'transparent',
+                color: isActive
+                  ? (meta?.color ?? 'var(--gold-primary)')
+                  : 'var(--text-muted)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 12,
+                fontWeight: isActive ? 700 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* المحتوى */}
+      {loading ? (
+        <div style={{ padding: '24px 0', textAlign: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+            {[0, 0.15, 0.3].map((d, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: 'var(--gold-primary)',
+                  animation: `blink 1.2s ease-in-out ${d}s infinite`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : logs.length === 0 ? (
+        <div
+          style={{
+            padding: '28px 0', textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🌿</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>
+            {filter === 'all' ? 'لا توجد لحظات مسجّلة بعد' : `لا توجد سجلات "${OUTCOME_META[filter]?.label ?? filter}"`}
+          </div>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7 }}>
+            سجّل اللحظات الصعبة من شاشة الـ SOS
+          </div>
+        </div>
+      ) : (
+        <div>
+          {logs.map((log, idx) => {
+            const { date, time } = formatTime(log.timestamp);
+            const meta = OUTCOME_META[log.outcome] ?? OUTCOME_META.distracted;
+            const triggerLabel = log.trigger ? (TRIGGER_AR[log.trigger] ?? log.trigger) : null;
+            const isLast = idx === logs.length - 1;
+
+            return (
+              <div
+                key={log.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                  padding: '13px 0',
+                  borderBottom: isLast ? 'none' : '1px solid var(--border-soft)',
+                }}
+              >
+                {/* الوقت */}
+                <div style={{ flexShrink: 0, minWidth: 52, textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    {date}
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', direction: 'ltr' }}>
+                    {time}
+                  </div>
+                </div>
+
+                {/* فاصل رأسي */}
+                <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-soft)', flexShrink: 0 }} />
+
+                {/* المحتوى الرئيسي */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+                    {/* شدة الإغراء */}
+                    <IntensityDots value={log.intensity} />
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)' }}>
+                      {toArabicNumerals(log.intensity)}/١٠
+                    </span>
+                  </div>
+
+                  {/* المحفّز */}
+                  {triggerLabel && (
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                      {triggerLabel}
+                    </div>
+                  )}
+                </div>
+
+                {/* النتيجة badge */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-button)',
+                    background: meta.bg,
+                    border: `1px solid ${meta.border}`,
+                    color: meta.color,
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {meta.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalysisPage() {
@@ -179,7 +430,33 @@ export default function AnalysisPage() {
   const [streakStats, setStreakStats] = useState<StreakStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  // ─── Urge log state ───────────────────────────────────────────────────────
+  const [urgeLogs, setUrgeLogs] = useState<UrgeLog[]>([]);
+  const [urgeTotal, setUrgeTotal] = useState(0);
+  const [urgeFilter, setUrgeFilter] = useState<UrgeOutcomeFilter>('all');
+  const [urgeLoading, setUrgeLoading] = useState(true);
+
+  const fetchUrges = (outcome: UrgeOutcomeFilter) => {
+    setUrgeLoading(true);
+    const params = new URLSearchParams({ limit: '20' });
+    if (outcome !== 'all') params.set('outcome', outcome);
+    fetch(`/api/urge?${params}`)
+      .then((r) => r.json())
+      .then((d: { logs?: UrgeLog[]; total?: number }) => {
+        setUrgeLogs(d.logs ?? []);
+        setUrgeTotal(d.total ?? 0);
+      })
+      .catch(() => {})
+      .finally(() => setUrgeLoading(false));
+  };
+
+  const handleUrgeFilterChange = (f: UrgeOutcomeFilter) => {
+    setUrgeFilter(f);
+    fetchUrges(f);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -193,16 +470,24 @@ export default function AnalysisPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    fetchUrges('all');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateAnalysis = async () => {
     setGenerating(true);
+    setGenerateError(null);
     try {
       const res = await fetch('/api/analysis', { method: 'POST' });
       const d = await res.json();
+      if (!res.ok) {
+        setGenerateError(d.error ?? 'فشل توليد التقرير — حاول مجدداً');
+        return;
+      }
       if (d.metrics) setData(d);
     } catch {
-      // صامت
+      setGenerateError('تعذّر الاتصال بالخادم — تحقق من الشبكة وحاول مجدداً');
     } finally {
       setGenerating(false);
     }
@@ -492,6 +777,15 @@ export default function AnalysisPage() {
         </div>
       )}
 
+      {/* ─── سجل اللحظات ──────────────────────────────────────────────────────── */}
+      <UrgeLogSection
+        logs={urgeLogs}
+        total={urgeTotal}
+        filter={urgeFilter}
+        loading={urgeLoading}
+        onFilterChange={handleUrgeFilterChange}
+      />
+
       {/* الأنماط */}
       <div style={{ marginBottom: 18 }}>
         {loading ? (
@@ -608,6 +902,24 @@ export default function AnalysisPage() {
       >
         {generating ? 'جاري التحليل...' : 'توليد تقرير جديد'}
       </button>
+
+      {generateError && (
+        <div
+          style={{
+            background: 'rgba(216,90,48,0.1)',
+            border: '1px solid rgba(216,90,48,0.35)',
+            borderRadius: 'var(--radius-card)',
+            padding: '12px 16px',
+            marginBottom: 20,
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            color: 'var(--alert-warm)',
+            direction: 'rtl',
+          }}
+        >
+          {generateError}
+        </div>
+      )}
     </div>
   );
 }

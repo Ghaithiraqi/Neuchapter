@@ -31,6 +31,21 @@ interface HourlySlot {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Returns the Monday of the current ISO week at UTC midnight.
+ * Produces the SAME Date value for every day within the same week —
+ * safe to use as a Prisma upsert key for @@unique([weekStart]).
+ */
+function getStableWeekStart(): Date {
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon, …, 6=Sat
+  const daysSinceMonday = (dayOfWeek + 6) % 7; // Mon→0, Tue→1, …, Sun→6
+  const monday = new Date(now);
+  monday.setUTCHours(0, 0, 0, 0);
+  monday.setUTCDate(now.getUTCDate() - daysSinceMonday);
+  return monday;
+}
+
 function getWeekRange() {
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -150,13 +165,15 @@ export async function GET(req: NextRequest) {
   try {
     const { now, weekAgo, twoWeeksAgo, weekNumber } = getWeekRange();
 
+    const currentWeekStart = getStableWeekStart();
+
     const [metrics, previousMetrics, moodTimeline, hourlyResult, latestAnalysis] =
       await Promise.all([
         computeMetricsForRange(weekAgo),
         computeMetricsForRange(twoWeeksAgo, weekAgo),
         computeMoodTimeline(now),
         computeHourlyDistribution(weekAgo),
-        db.weeklyAnalysis.findFirst({ orderBy: { createdAt: 'desc' } }),
+        db.weeklyAnalysis.findUnique({ where: { weekStart: currentWeekStart } }),
       ]);
 
     const { deltas, trends } = computeDeltas(metrics, previousMetrics);
@@ -191,6 +208,8 @@ export async function POST(req: NextRequest) {
   try {
     const { now, weekAgo, twoWeeksAgo, weekNumber } = getWeekRange();
 
+    const stableWeekStart = getStableWeekStart();
+
     const [metrics, previousMetrics, moodTimeline, hourlyResult] = await Promise.all([
       computeMetricsForRange(weekAgo),
       computeMetricsForRange(twoWeeksAgo, weekAgo),
@@ -212,14 +231,13 @@ export async function POST(req: NextRequest) {
       weekNumber,
     };
 
-    // ── 24h cache check ──
+    // ── 24h cache check: look up this week's row specifically ──
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentAnalysis = await db.weeklyAnalysis.findFirst({
-      where: { createdAt: { gte: twentyFourHoursAgo } },
-      orderBy: { createdAt: 'desc' },
+    const recentAnalysis = await db.weeklyAnalysis.findUnique({
+      where: { weekStart: stableWeekStart },
     });
 
-    if (recentAnalysis) {
+    if (recentAnalysis && recentAnalysis.createdAt >= twentyFourHoursAgo) {
       return NextResponse.json({
         ...livePayload,
         patterns: JSON.parse(recentAnalysis.patterns),
@@ -322,9 +340,9 @@ ${urgeLines}`;
 
     // ── Save to DB ──
     await db.weeklyAnalysis.upsert({
-      where: { weekStart: weekAgo },
+      where: { weekStart: stableWeekStart },
       create: {
-        weekStart: weekAgo,
+        weekStart: stableWeekStart,
         weekEnd: now,
         weekNumber,
         metrics: JSON.stringify(metrics),
@@ -350,6 +368,7 @@ ${urgeLines}`;
     });
   } catch (err) {
     console.error('Analysis POST error:', err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'خطأ غير متوقع في الخادم';
+    return NextResponse.json({ error: 'فشل توليد التقرير', detail: message }, { status: 500 });
   }
 }
