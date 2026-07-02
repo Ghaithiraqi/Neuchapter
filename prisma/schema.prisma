@@ -126,6 +126,14 @@ model SavedMessage {
   savedAt   DateTime @default(now())
 }
 
+// محاولات تسجيل الدخول (للحماية من التخمين)
+model LoginAttempt {
+  ip          String   @id
+  attempts    Int      @default(0)
+  windowStart DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // سجل استخدام الـ API
 model UsageLog {
   id            Int      @id @default(autoincrement())
