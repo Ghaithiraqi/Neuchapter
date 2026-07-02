@@ -9,6 +9,15 @@ interface Settings {
   bedtimeHour: number | null;
   reminderEnabled: boolean;
   voiceEnabled: boolean;
+  profileSummary: string | null;
+}
+
+interface UserProfile {
+  triggers: string[];
+  copingWorks: string[];
+  patterns: string[];
+  goals: string[];
+  tone: string;
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -26,6 +35,65 @@ const HOURS = Array.from({ length: 24 }, (_, i) => {
   const display = i === 0 ? `١٢ ${period}` : i < 13 ? `${i} ${period}` : `${i - 12} ${period}`;
   return { value: i, label: display };
 });
+
+function AddItemInput({
+  placeholder,
+  onAdd,
+}: {
+  placeholder: string;
+  onAdd: (val: string) => void;
+}) {
+  const [val, setVal] = useState('');
+  return (
+    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+      <input
+        type="text"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && val.trim()) {
+            onAdd(val.trim());
+            setVal('');
+          }
+        }}
+        placeholder={placeholder}
+        style={{
+          background: 'var(--bg-input)',
+          border: '1px solid var(--border-mid)',
+          borderRadius: 'var(--radius-input)',
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
+          padding: '7px 12px',
+          outline: 'none',
+          flex: 1,
+          direction: 'rtl',
+        }}
+      />
+      <button
+        onClick={() => {
+          if (val.trim()) {
+            onAdd(val.trim());
+            setVal('');
+          }
+        }}
+        style={{
+          background: 'var(--gold-faint)',
+          border: '1px solid var(--border-mid)',
+          borderRadius: 'var(--radius-input)',
+          color: 'var(--gold-primary)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
+          cursor: 'pointer',
+          padding: '7px 14px',
+          flexShrink: 0,
+        }}
+      >
+        +
+      </button>
+    </div>
+  );
+}
 
 function Toggle({
   checked,
@@ -124,9 +192,13 @@ export default function SettingsPage() {
     bedtimeHour: 23,
     reminderEnabled: true,
     voiceEnabled: true,
+    profileSummary: null,
   });
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [profile, setProfile] = useState<UserProfile>({
+    triggers: [], copingWorks: [], patterns: [], goals: [], tone: '',
+  });
 
   useEffect(() => {
     fetch('/api/settings')
@@ -139,11 +211,31 @@ export default function SettingsPage() {
             bedtimeHour: d.settings.bedtimeHour ?? null,
             reminderEnabled: d.settings.reminderEnabled ?? true,
             voiceEnabled: d.settings.voiceEnabled ?? true,
+            profileSummary: d.settings.profileSummary ?? null,
           });
         }
       })
       .catch(() => {/* سيبقى النموذج بقيمه الافتراضية */})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!form.profileSummary) return;
+    try {
+      const parsed = JSON.parse(form.profileSummary) as Partial<UserProfile>;
+      setProfile({
+        triggers: parsed.triggers ?? [],
+        copingWorks: parsed.copingWorks ?? [],
+        patterns: parsed.patterns ?? [],
+        goals: parsed.goals ?? [],
+        tone: parsed.tone ?? '',
+      });
+    } catch { /* invalid JSON — keep current profile state */ }
+  }, [form.profileSummary]);
+
+  const syncProfileToForm = useCallback((updatedProfile: UserProfile) => {
+    setProfile(updatedProfile);
+    setForm(p => ({ ...p, profileSummary: JSON.stringify(updatedProfile) }));
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -385,7 +477,7 @@ export default function SettingsPage() {
           border: '1px solid var(--border-soft)',
           borderRadius: 'var(--radius-card)',
           padding: '4px 20px',
-          marginBottom: 32,
+          marginBottom: 16,
         }}
       >
         <div
@@ -424,6 +516,186 @@ export default function SettingsPage() {
         </FieldRow>
 
         <div style={{ height: 8 }} />
+      </div>
+
+      {/* ما يعرفه عنك رفيقك */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-soft)',
+          borderRadius: 'var(--radius-card)',
+          padding: '4px 20px',
+          marginBottom: 32,
+          direction: 'rtl',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--gold-primary)',
+            fontWeight: 700,
+            letterSpacing: 0.8,
+            padding: '16px 0 0',
+          }}
+        >
+          ما يعرفه عنك رفيقك
+        </div>
+
+        <div
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            color: 'var(--text-muted)',
+            lineHeight: 1.6,
+            padding: '10px 0 14px',
+          }}
+        >
+          هذا ما تعلّمه رفيقك عنك عبر محادثاتكم. يمكنك تعديله أو حذفه في أي وقت.
+        </div>
+
+        {!form.profileSummary ? (
+          <div
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 14,
+              color: 'var(--text-muted)',
+              paddingBottom: 16,
+              fontStyle: 'italic',
+            }}
+          >
+            لم تكتمل محادثة كافية بعد لبناء ملفك الشخصي.
+          </div>
+        ) : (
+          <div style={{ paddingBottom: 16 }}>
+            {(
+              [
+                { key: 'triggers', label: 'المحفّزات' },
+                { key: 'copingWorks', label: 'ما ينجح معك' },
+                { key: 'patterns', label: 'الأنماط' },
+                { key: 'goals', label: 'الأهداف' },
+              ] as { key: keyof Pick<UserProfile, 'triggers' | 'copingWorks' | 'patterns' | 'goals'>; label: string }[]
+            ).map(({ key, label }) => (
+              <div key={key} style={{ marginBottom: 16 }}>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 12,
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
+                    marginBottom: 8,
+                  }}
+                >
+                  {label}
+                </div>
+                {profile[key].map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 13,
+                        color: 'var(--text-primary)',
+                        flex: 1,
+                      }}
+                    >
+                      {item}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const updated = { ...profile, [key]: profile[key].filter((_, i) => i !== idx) };
+                        syncProfileToForm(updated);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        fontSize: 14,
+                        lineHeight: 1,
+                        padding: '2px 6px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <AddItemInput
+                  placeholder={`أضف ${label}...`}
+                  onAdd={(val) => {
+                    const updated = { ...profile, [key]: [...profile[key], val] };
+                    syncProfileToForm(updated);
+                  }}
+                />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: 8 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  fontWeight: 600,
+                  marginBottom: 8,
+                }}
+              >
+                نبرة التواصل
+              </div>
+              <input
+                type="text"
+                value={profile.tone}
+                onChange={(e) => {
+                  const updated = { ...profile, tone: e.target.value };
+                  syncProfileToForm(updated);
+                }}
+                placeholder="مثال: مباشر وصريح، أو دافئ وصبور..."
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border-mid)',
+                  borderRadius: 'var(--radius-input)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13,
+                  padding: '8px 12px',
+                  outline: 'none',
+                  width: '100%',
+                  direction: 'rtl',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                setForm(p => ({ ...p, profileSummary: null }));
+                setProfile({ triggers: [], copingWorks: [], patterns: [], goals: [], tone: '' });
+              }}
+              style={{
+                background: 'none',
+                border: '1px solid var(--border-mid)',
+                borderRadius: 'var(--radius-button)',
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 12,
+                cursor: 'pointer',
+                padding: '6px 14px',
+                marginTop: 8,
+              }}
+            >
+              حذف الملف الشخصي
+            </button>
+          </div>
+        )}
       </div>
 
       {/* زر الحفظ */}

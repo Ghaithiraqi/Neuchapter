@@ -10,14 +10,94 @@ import { getCurrentMilestone } from '@/lib/milestones';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-function buildBasePrompt(userName: string): string {
-  return `أنت مساعد ذكي وصديق صادق لشخص اسمه ${userName} في رحلة تعافيه من الإدمان على المواد الإباحية.
+function buildBasePrompt(userName: string, profileSummary?: string | null): string {
+  const base = `أنت مساعد ذكي وصديق صادق لشخص اسمه ${userName} في رحلة تعافيه من الإدمان على المواد الإباحية.
 قواعد أساسية:
 ١. الصراحة أهم من الإرضاء. لا تتملق.
 ٢. عند علامات اكتئاب شديد أو أفكار إيذاء، وجّهه لمصدر بشري.
 ٣. تجنب اللغة الواعظة أو الدينية ما لم يبدأ هو.
 ٤. التعافي ليس خطاً مستقيماً — الانتكاسات جزء من الرحلة.
 ٥. اللهجة: عربي فصيح ودود، ليس رسمياً مبالغاً.`;
+  if (profileSummary && profileSummary.trim()) {
+    return base + `\n[ملف شخصي متراكم — استخدمه كسياق خلفي فقط، لا تذكره صراحةً للمستخدم]:\n${profileSummary}`;
+  }
+  return base;
+}
+
+async function updateUserProfile(sessionId: number): Promise<void> {
+  try {
+    // Cooldown check: skip if updated within last 30 minutes
+    const settings = await db.userSettings.findUnique({
+      where: { id: 1 },
+      select: { profileSummary: true, profileUpdatedAt: true },
+    });
+    if (
+      settings?.profileUpdatedAt &&
+      Date.now() - settings.profileUpdatedAt.getTime() < 30 * 60 * 1000
+    ) return;
+
+    // Fetch last 10 messages from this session
+    const recentMessages = await db.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: { role: true, content: true },
+    });
+    if (recentMessages.length === 0) return;
+
+    const messagesText = recentMessages
+      .reverse()
+      .map((m) => `${m.role === 'user' ? 'المستخدم' : 'المساعد'}: ${m.content.slice(0, 300)}`)
+      .join('\n');
+
+    const currentProfile = settings?.profileSummary ?? 'لا يوجد ملف سابق';
+
+    const res = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      messages: [
+        {
+          role: 'user',
+          content: `أنت محلل سلوكي. مهمتك استخراج معلومات موضوعية وواقعية فقط.
+
+توجيه صارم: استخرج وقائع وأنماطًا فقط. ممنوع منعًا باتًا إصدار أي أحكام أو تقييمات سلبية عن المستخدم. صف ما يحدث فقط، لا تحكم على شخصيته أو قيمته.
+
+الملف الحالي:
+${currentProfile}
+
+آخر رسائل المحادثة:
+${messagesText}
+
+أعد توليد الملف كاملاً (ليس تحديثًا جزئيًا) بصيغة JSON فقط:
+{"triggers":["..."],"copingWorks":["..."],"patterns":["..."],"goals":["..."],"tone":"..."}
+
+القواعد:
+- كل النصوص بالعربية
+- triggers: المحفزات الموثقة (أسباب الوقوع في الإغراء)
+- copingWorks: أساليب المقاومة التي أثبتت نجاعتها
+- patterns: أنماط سلوكية موثقة (وقائع، لا أحكام)
+- goals: الأهداف التي ذكرها المستخدم
+- tone: نبرة التواصل المفضلة لديه
+- إن لم تجد معلومات كافية لمفتاح، اجعله مصفوفة فارغة أو نص فارغ
+- أرجع JSON صالح فقط، بلا نص خارجه`,
+        },
+      ],
+    });
+
+    const text = res.content[0].type === 'text' ? res.content[0].text : '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return;
+
+    JSON.parse(match[0]); // validate — throws if invalid
+
+    await db.userSettings.upsert({
+      where: { id: 1 },
+      create: { id: 1, profileSummary: match[0], profileUpdatedAt: new Date() },
+      update: { profileSummary: match[0], profileUpdatedAt: new Date() },
+    });
+  } catch (err) {
+    console.error('Profile update error (silent):', err);
+  }
 }
 
 async function getSuggestions(userMsg: string, aiResponse: string): Promise<string[]> {
@@ -72,7 +152,7 @@ export async function POST(req: NextRequest) {
       db.urgeLog.count({
         where: { timestamp: { gte: new Date(Date.now() - 7 * 86400000) } },
       }),
-      db.userSettings.findUnique({ where: { id: 1 }, select: { name: true } }),
+      db.userSettings.findUnique({ where: { id: 1 }, select: { name: true, profileSummary: true } }),
     ]);
 
     const userName = userSettings?.name?.trim() || 'غيث';
@@ -108,7 +188,7 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
 - عدد اللحظات الصعبة هذا الأسبوع: ${urgesCount}`
         : '';
 
-    const systemPrompt = [modePrompt || buildBasePrompt(userName), contextBlock].filter(Boolean).join('\n');
+    const systemPrompt = [modePrompt || buildBasePrompt(userName, userSettings?.profileSummary), contextBlock].filter(Boolean).join('\n');
 
     // ─── الجلسة ──────────────────────────────────────────────────────────────
     let session;
@@ -195,6 +275,14 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
           ]);
 
           send({ type: 'done', sessionId: currentSessionId, suggestions });
+
+          // Count AI turns in this session
+          const aiTurnCount = await db.chatMessage.count({
+            where: { sessionId: currentSessionId, role: 'assistant' },
+          });
+          if (aiTurnCount > 0 && aiTurnCount % 5 === 0) {
+            updateUserProfile(currentSessionId).catch(console.error);
+          }
         } catch (err) {
           console.error('Stream error:', err);
           send({ type: 'error', message: 'حدث خطأ أثناء الاتصال' });

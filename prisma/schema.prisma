@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // عداد الأيام والـ streaks
@@ -107,13 +106,15 @@ model DailyTip {
 
 // إعدادات المستخدم
 model UserSettings {
-  id              Int      @id @default(1)
-  name            String   @default("غيث")
-  timezone        String   @default("Asia/Baghdad")
-  bedtimeHour     Int?     @default(23)
-  reminderEnabled Boolean  @default(true)
-  voiceEnabled    Boolean  @default(true)
-  updatedAt       DateTime @updatedAt
+  id               Int       @id @default(1)
+  name             String    @default("غيث")
+  timezone         String    @default("Asia/Baghdad")
+  bedtimeHour      Int?      @default(23)
+  reminderEnabled  Boolean   @default(true)
+  voiceEnabled     Boolean   @default(true)
+  profileSummary   String?   @db.Text
+  profileUpdatedAt DateTime?
+  updatedAt        DateTime  @updatedAt
 }
 
 // رسائل محفوظة

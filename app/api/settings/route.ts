@@ -36,6 +36,7 @@ export async function PUT(req: NextRequest) {
       bedtimeHour?: number | null;
       reminderEnabled?: boolean;
       voiceEnabled?: boolean;
+      profileSummary?: string | null;
     };
 
     const data: Record<string, unknown> = {};
@@ -44,6 +45,7 @@ export async function PUT(req: NextRequest) {
     if ('bedtimeHour' in body) data.bedtimeHour = body.bedtimeHour ?? null;
     if (typeof body.reminderEnabled === 'boolean') data.reminderEnabled = body.reminderEnabled;
     if (typeof body.voiceEnabled === 'boolean') data.voiceEnabled = body.voiceEnabled;
+    if (body.profileSummary !== undefined) data.profileSummary = body.profileSummary;
 
     const settings = await db.userSettings.upsert({
       where: { id: 1 },
