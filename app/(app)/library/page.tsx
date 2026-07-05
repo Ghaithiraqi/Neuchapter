@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,8 +19,27 @@ interface Unit {
 
 // ─── Unit Accordion ───────────────────────────────────────────────────────────
 
-function UnitRow({ unit }: { unit: Unit }) {
-  const [open, setOpen] = useState(false);
+function UnitRow({
+  unit,
+  initialOpen = false,
+  shouldScroll = false,
+}: {
+  unit: Unit;
+  initialOpen?: boolean;
+  shouldScroll?: boolean;
+}) {
+  const [open, setOpen] = useState(initialOpen);
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (shouldScroll && rowRef.current) {
+      const t = setTimeout(
+        () => rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+        120
+      );
+      return () => clearTimeout(t);
+    }
+  }, [shouldScroll]);
 
   // تنسيق المحتوى: **نص** → bold، أسطر فارغة → فقرات
   const renderContent = (text: string) => {
@@ -46,12 +65,13 @@ function UnitRow({ unit }: { unit: Unit }) {
 
   return (
     <div
+      ref={rowRef}
       style={{
-        border: '1px solid var(--border-soft)',
+        border: shouldScroll ? '1px solid var(--gold-primary)' : '1px solid var(--border-soft)',
         borderRadius: 'var(--radius-small)',
         overflow: 'hidden',
         background: open ? 'var(--bg-elevated)' : 'var(--bg-card)',
-        transition: 'background 0.2s ease',
+        transition: 'background 0.2s ease, border-color 0.3s ease',
       }}
     >
       {/* عنوان الوحدة — قابل للنقر */}
@@ -214,19 +234,23 @@ function BookCard({ book, onSelect }: { book: Book; onSelect: () => void }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function LibraryPage() {
+function LibraryContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const bookParam = searchParams.get('book');
+  const unitParam = searchParams.get('unit') ? parseInt(searchParams.get('unit')!, 10) : null;
 
   // حالة القائمة
-  const [books, setBooks]           = useState<Book[]>([]);
+  const [books, setBooks]               = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(true);
-  const [booksError, setBooksError] = useState('');
+  const [booksError, setBooksError]     = useState('');
 
   // حالة الكتاب المختار
-  const [selectedBook, setSelectedBook]   = useState<Book | null>(null);
-  const [units, setUnits]                 = useState<Unit[]>([]);
-  const [unitsLoading, setUnitsLoading]   = useState(false);
-  const [unitsError, setUnitsError]       = useState('');
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [units, setUnits]               = useState<Unit[]>([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsError, setUnitsError]     = useState('');
 
   // ─── جلب قائمة الكتب ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -239,6 +263,15 @@ export default function LibraryPage() {
       .catch(() => setBooksError('تعذّر الاتصال'))
       .finally(() => setBooksLoading(false));
   }, []);
+
+  // ─── فتح كتاب تلقائيًا عند وجود bookParam ─────────────────────────────────
+  useEffect(() => {
+    if (!booksLoading && bookParam && books.length > 0 && !selectedBook) {
+      const book = books.find((b) => b.bookSlug === bookParam);
+      if (book) openBook(book);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booksLoading, books]);
 
   // ─── جلب وحدات كتاب ───────────────────────────────────────────────────────
   const openBook = async (book: Book) => {
@@ -265,7 +298,9 @@ export default function LibraryPage() {
     setUnitsError('');
   };
 
-  const color = selectedBook ? (BOOK_COLORS[selectedBook.bookSlug] ?? 'var(--gold-primary)') : 'var(--gold-primary)';
+  const color = selectedBook
+    ? (BOOK_COLORS[selectedBook.bookSlug] ?? 'var(--gold-primary)')
+    : 'var(--gold-primary)';
 
   return (
     <div
@@ -465,13 +500,44 @@ export default function LibraryPage() {
 
           {!unitsLoading && units.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {units.map((unit) => (
-                <UnitRow key={unit.unitNumber} unit={unit} />
-              ))}
+              {units.map((unit) => {
+                const isTarget = unitParam !== null && unit.unitNumber === unitParam;
+                return (
+                  <UnitRow
+                    key={unit.unitNumber}
+                    unit={unit}
+                    initialOpen={isTarget}
+                    shouldScroll={isTarget}
+                  />
+                );
+              })}
             </div>
           )}
         </>
       )}
     </div>
+  );
+}
+
+// ─── Export with Suspense (useSearchParams requires it) ───────────────────────
+
+export default function LibraryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            padding: 40,
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+            fontFamily: 'var(--font-body)',
+          }}
+        >
+          جاري التحميل...
+        </div>
+      }
+    >
+      <LibraryContent />
+    </Suspense>
   );
 }

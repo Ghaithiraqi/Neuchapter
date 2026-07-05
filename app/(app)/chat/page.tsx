@@ -76,7 +76,9 @@ const SLASH_CMDS = [
 
 interface MessageSource {
   id: string;
+  bookSlug: string;
   bookTitle: string;
+  unitNumber: number;
   unitTitle: string;
   snippet: string;
 }
@@ -204,6 +206,7 @@ function MeditationModal({ onClose }: { onClose: () => void }) {
 
 function SourceChip({ source }: { source: MessageSource }) {
   const [expanded, setExpanded] = useState(false);
+  const chipRouter = useRouter();
 
   // اختصار اسم الكتاب: قبل القوس الأول
   const shortBook = source.bookTitle.split('(')[0].trim();
@@ -283,19 +286,27 @@ function SourceChip({ source }: { source: MessageSource }) {
             {source.snippet}
             {source.snippet.length >= 180 ? '…' : ''}
           </p>
-          {/* placeholder — سيُربط بصفحة المكتبة لاحقًا */}
-          <span
+          <button
+            onClick={() =>
+              chipRouter.push(
+                `/library?book=${source.bookSlug}&unit=${source.unitNumber}`
+              )
+            }
             style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
               fontFamily: 'var(--font-body)',
               fontSize: 11,
-              color: 'var(--text-muted)',
-              opacity: 0.5,
-              cursor: 'not-allowed',
-              userSelect: 'none',
+              color: 'var(--gold-primary)',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              textUnderlineOffset: 2,
+              opacity: 0.85,
             }}
           >
             عرض الكامل ↗
-          </span>
+          </button>
         </div>
       )}
     </div>

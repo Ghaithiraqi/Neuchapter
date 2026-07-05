@@ -9,7 +9,9 @@ import OpenAI from 'openai'
 
 export interface KnowledgeResult {
   id: string
+  bookSlug: string
   bookTitle: string
+  unitNumber: number
   unitTitle: string
   content: string
   similarity: number
@@ -50,7 +52,9 @@ export async function searchKnowledge(
   const rows = await db.$queryRaw<
     Array<{
       id: string
+      bookSlug: string
       bookTitle: string
+      unitNumber: number
       unitTitle: string
       content: string
       similarity: number
@@ -61,7 +65,9 @@ export async function searchKnowledge(
     )
     SELECT
       kc.id,
+      kc."bookSlug",
       kc."bookTitle",
+      kc."unitNumber",
       kc."unitTitle",
       kc.content,
       CAST(1 - (kc.embedding <=> qv.vec) AS FLOAT8) AS similarity

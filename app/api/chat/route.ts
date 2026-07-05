@@ -298,7 +298,9 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
 
           const sources = knowledgeResults.map((r) => ({
             id: r.id,
+            bookSlug: r.bookSlug,
             bookTitle: r.bookTitle,
+            unitNumber: r.unitNumber,
             unitTitle: r.unitTitle,
             snippet: r.content.slice(0, 180),
           }));
