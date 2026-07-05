@@ -159,6 +159,29 @@ export async function POST(req: NextRequest) {
 
     const userName = userSettings?.name?.trim() || 'غيث';
 
+    // ─── RAG الاستباقي: استخراج محفّزات الملف الشخصي ─────────────────────────
+    const triggers: string[] = (() => {
+      try {
+        const parsed = JSON.parse(userSettings?.profileSummary ?? '{}');
+        return Array.isArray(parsed.triggers) ? parsed.triggers.slice(0, 3) : [];
+      } catch { return []; }
+    })();
+
+    const PROACTIVE_MODES = new Set(['reflect', 'analyze', 'motivate']);
+    const modeAllowed = typeof mode === 'string' && PROACTIVE_MODES.has(mode);
+
+    let allKnowledgeResults = knowledgeResults;
+    if (knowledgeResults.length === 0 && modeAllowed && triggers.length > 0) {
+      const triggerQuery = `أشعر بـ ${triggers.join(' و')} وأحتاج طرقًا للتعامل مع هذه المحفّزات`;
+      const proactive = await searchKnowledge(
+        triggerQuery,
+        { minSimilarity: 0.32, limit: 2 },
+      ).catch(() => [] as Awaited<ReturnType<typeof searchKnowledge>>);
+      const seenIds = new Set(knowledgeResults.map((r) => r.id));
+      const fresh = proactive.filter((r) => !seenIds.has(r.id));
+      allKnowledgeResults = [...knowledgeResults, ...fresh].slice(0, 2);
+    }
+
     // احتساب أيام الـ streak
     let streakDays = 0;
     let milestoneName = '';
@@ -191,9 +214,9 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
         : '';
 
     // ── كتلة المعرفة (RAG) — اختيارية: تُضاف فقط حين توجد نتائج فوق العتبة ──
-    const ragBlock = knowledgeResults.length > 0
+    const ragBlock = allKnowledgeResults.length > 0
       ? `\n[معرفة علمية من مكتبة مرجعية — استخدمها إن كانت ذات صلة بالسؤال]:\n` +
-        knowledgeResults
+        allKnowledgeResults
           .map(r => `【${r.bookTitle} — ${r.unitTitle}】\n${r.content.slice(0, 500)}`)
           .join('\n\n')
       : '';
@@ -296,7 +319,7 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
             getSuggestions(message, fullText),
           ]);
 
-          const sources = knowledgeResults.map((r) => ({
+          const sources = allKnowledgeResults.map((r) => ({
             id: r.id,
             bookSlug: r.bookSlug,
             bookTitle: r.bookTitle,
