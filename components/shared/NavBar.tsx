@@ -60,8 +60,42 @@ export function NavBar() {
         </span>
       </div>
 
-      {/* الجانب الأيسر: الإعدادات + القفل */}
+      {/* الجانب الأيسر: المكتبة + الإعدادات + القفل */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+      {/* زر المكتبة */}
+      <Link
+        href="/library"
+        aria-label="المكتبة"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: 'var(--gold-faint)',
+          border: '1px solid var(--border-soft)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          textDecoration: 'none',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <svg
+          width="15"
+          height="15"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          stroke="var(--text-muted)"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+          />
+        </svg>
+      </Link>
 
       {/* زر الإعدادات */}
       <Link
