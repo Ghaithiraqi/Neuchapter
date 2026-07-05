@@ -296,7 +296,13 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
             getSuggestions(message, fullText),
           ]);
 
-          send({ type: 'done', sessionId: currentSessionId, suggestions });
+          const sources = knowledgeResults.map((r) => ({
+            id: r.id,
+            bookTitle: r.bookTitle,
+            unitTitle: r.unitTitle,
+            snippet: r.content.slice(0, 180),
+          }));
+          send({ type: 'done', sessionId: currentSessionId, suggestions, sources });
 
           // Count AI turns in this session
           const aiTurnCount = await db.chatMessage.count({

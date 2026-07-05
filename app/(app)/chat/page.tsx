@@ -74,11 +74,19 @@ const SLASH_CMDS = [
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface MessageSource {
+  id: string;
+  bookTitle: string;
+  unitTitle: string;
+  snippet: string;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   time: string;
   savedId?: number; // DB id إذا تم الحفظ
+  sources?: MessageSource[];
 }
 
 // ─── Breathing Modal ──────────────────────────────────────────────────────────
@@ -188,6 +196,127 @@ function MeditationModal({ onClose }: { onClose: () => void }) {
           إغلاق
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── Source Chips ─────────────────────────────────────────────────────────────
+
+function SourceChip({ source }: { source: MessageSource }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // اختصار اسم الكتاب: قبل القوس الأول
+  const shortBook = source.bookTitle.split('(')[0].trim();
+
+  return (
+    <div
+      style={{
+        border: '1px solid var(--border-soft)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        background: 'var(--gold-faint)',
+        maxWidth: 320,
+      }}
+    >
+      {/* رأس الشريحة — قابل للنقر */}
+      <button
+        onClick={() => setExpanded((e) => !e)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          width: '100%',
+          padding: '5px 10px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'right',
+        }}
+      >
+        <span style={{ fontSize: 12, flexShrink: 0 }}>📖</span>
+        <span
+          style={{
+            flex: 1,
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--gold-primary)',
+            lineHeight: 1.4,
+            textAlign: 'right',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {shortBook} — {source.unitTitle}
+        </span>
+        <span
+          style={{
+            fontSize: 9,
+            color: 'var(--text-muted)',
+            flexShrink: 0,
+            transition: 'transform 0.2s',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            display: 'inline-block',
+          }}
+        >
+          ▾
+        </span>
+      </button>
+
+      {/* المقتطف — يظهر عند التوسيع */}
+      {expanded && (
+        <div
+          style={{
+            padding: '0 10px 8px',
+            borderTop: '1px solid var(--border-soft)',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+              margin: '8px 0 6px',
+            }}
+          >
+            {source.snippet}
+            {source.snippet.length >= 180 ? '…' : ''}
+          </p>
+          {/* placeholder — سيُربط بصفحة المكتبة لاحقًا */}
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              opacity: 0.5,
+              cursor: 'not-allowed',
+              userSelect: 'none',
+            }}
+          >
+            عرض الكامل ↗
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SourceChips({ sources }: { sources?: MessageSource[] }) {
+  if (!sources?.length) return null;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        marginTop: 4,
+        paddingRight: 4,
+      }}
+    >
+      {sources.map((s) => (
+        <SourceChip key={s.id} source={s} />
+      ))}
     </div>
   );
 }
@@ -374,13 +503,13 @@ function ChatContent() {
         for (const line of lines) {
           if (!line.trim()) continue;
           try {
-            const obj = JSON.parse(line) as { type: string; text?: string; sessionId?: number; suggestions?: string[] };
+            const obj = JSON.parse(line) as { type: string; text?: string; sessionId?: number; suggestions?: string[]; sources?: MessageSource[] };
             if (obj.type === 'delta' && obj.text) {
               accumulated += obj.text;
               setStreamingText(accumulated);
             } else if (obj.type === 'done') {
               const replyTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-              setMessages((prev) => [...prev, { role: 'assistant', content: accumulated, time: replyTime }]);
+              setMessages((prev) => [...prev, { role: 'assistant', content: accumulated, time: replyTime, sources: obj.sources ?? [] }]);
               setStreamingText('');
               if (obj.sessionId) setSessionId(obj.sessionId);
               if (obj.suggestions?.length) setSuggestions(obj.suggestions);
@@ -696,6 +825,11 @@ function ChatContent() {
             >
               {msg.content}
             </div>
+
+            {/* بطاقات المصادر — لرسائل المساعد فقط */}
+            {msg.role === 'assistant' && (
+              <SourceChips sources={msg.sources} />
+            )}
 
             {/* Action buttons for assistant messages */}
             {msg.role === 'assistant' && (
