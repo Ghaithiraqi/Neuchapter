@@ -44,15 +44,24 @@ export default function SOSPage() {
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [logDone, setLogDone] = useState(false);
   const [logIntensity, setLogIntensity] = useState(5);
+  const [logBtnState, setLogBtnState] = useState<'idle' | 'saving' | 'done'>('idle');
 
   const handleAction = async (action: string) => {
     if (action === 'log') {
-      await fetch('/api/urge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intensity: logIntensity, outcome: 'resisted' }),
-      });
-      setLogDone(true);
+      if (logBtnState !== 'idle') return;
+      setLogBtnState('saving');
+      try {
+        await fetch('/api/urge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ intensity: logIntensity, outcome: 'resisted' }),
+        });
+        setLogBtnState('done');
+        setLogDone(true);
+        setTimeout(() => setLogBtnState('idle'), 4000);
+      } catch {
+        setLogBtnState('idle');
+      }
       return;
     }
     setActiveAction(action);
@@ -332,66 +341,81 @@ export default function SOSPage() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {PROTOCOL_OPTIONS.map((opt) => (
-            <button
-              key={opt.step}
-              onClick={() => handleAction(opt.action)}
-              style={{
-                padding: '16px 18px',
-                background: activeAction === opt.action ? 'var(--bg-elevated)' : 'var(--bg-card)',
-                border: `1px solid ${activeAction === opt.action ? 'var(--border-strong)' : 'var(--border-soft)'}`,
-                borderRadius: 'var(--radius-small)',
-                cursor: 'pointer',
-                transition: 'all 0.25s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                textAlign: 'right',
-              }}
-            >
-              <div
+          {PROTOCOL_OPTIONS.map((opt) => {
+            const isLog = opt.action === 'log';
+            const isDone = isLog && logBtnState === 'done';
+            const isSaving = isLog && logBtnState === 'saving';
+            const isActive = activeAction === opt.action;
+
+            return (
+              <button
+                key={opt.step}
+                onClick={() => handleAction(opt.action)}
+                disabled={isSaving}
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 14,
-                  color: 'var(--gold-primary)',
-                  fontWeight: 700,
-                  width: 32,
-                  flexShrink: 0,
-                  textAlign: 'center',
+                  padding: '16px 18px',
+                  background: isDone
+                    ? 'rgba(74, 165, 87, 0.12)'
+                    : isActive ? 'var(--bg-elevated)' : 'var(--bg-card)',
+                  border: `1px solid ${isDone ? 'rgba(74,165,87,0.45)' : isActive ? 'var(--border-strong)' : 'var(--border-soft)'}`,
+                  borderRadius: 'var(--radius-small)',
+                  cursor: isSaving ? 'wait' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  textAlign: 'right',
+                  opacity: isSaving ? 0.7 : 1,
                 }}
               >
-                {opt.step}
-              </div>
-              <div
-                style={{
-                  width: 1,
-                  height: 30,
-                  background: 'var(--border-mid)',
-                  flexShrink: 0,
-                }}
-              />
-              <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 15,
-                    color: 'var(--text-primary)',
-                    marginBottom: 3,
-                    fontWeight: 500,
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 14,
+                    color: isDone ? '#4aa557' : 'var(--gold-primary)',
+                    fontWeight: 700,
+                    width: 32,
+                    flexShrink: 0,
+                    textAlign: 'center',
+                    transition: 'color 0.3s ease',
                   }}
                 >
-                  {opt.title}
+                  {isDone ? '✓' : isSaving ? '…' : opt.step}
                 </div>
-                <div style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12,
-                  color: 'var(--text-muted)',
-                }}>
-                  {opt.desc}
+                <div
+                  style={{
+                    width: 1,
+                    height: 30,
+                    background: isDone ? 'rgba(74,165,87,0.35)' : 'var(--border-mid)',
+                    flexShrink: 0,
+                    transition: 'background 0.3s ease',
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 15,
+                      color: isDone ? '#4aa557' : 'var(--text-primary)',
+                      marginBottom: 3,
+                      fontWeight: 500,
+                      transition: 'color 0.3s ease',
+                    }}
+                  >
+                    {isDone ? 'تم التسجيل ✓' : isSaving ? 'جارٍ التسجيل...' : opt.title}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 12,
+                    color: isDone ? 'rgba(74,165,87,0.8)' : 'var(--text-muted)',
+                    transition: 'color 0.3s ease',
+                  }}>
+                    {isDone ? 'أحسنت على المقاومة' : opt.desc}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

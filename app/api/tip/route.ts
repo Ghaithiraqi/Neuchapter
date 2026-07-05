@@ -38,10 +38,22 @@ export async function GET(req: NextRequest) {
 
   try {
     // حاول جلب نصيحة من قاعدة البيانات
-    const tip = await db.dailyTip.findFirst({
+    let tip = await db.dailyTip.findFirst({
       where: { shownAt: null },
       orderBy: { id: 'asc' },
     });
+
+    // إن استُنفدت كل النصائح، أعِد ضبطها لتدور من البداية
+    if (!tip) {
+      const total = await db.dailyTip.count();
+      if (total > 0) {
+        await db.dailyTip.updateMany({ data: { shownAt: null } });
+        tip = await db.dailyTip.findFirst({
+          where: { shownAt: null },
+          orderBy: { id: 'asc' },
+        });
+      }
+    }
 
     if (tip) {
       await db.dailyTip.update({
@@ -51,7 +63,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ tip });
     }
 
-    // رجّع نصيحة عشوائية من القائمة الافتراضية
+    // رجّع نصيحة عشوائية من القائمة الافتراضية (fallback نهائي)
     const random = DEFAULT_TIPS[Math.floor(Math.random() * DEFAULT_TIPS.length)];
     return NextResponse.json({ tip: random });
   } catch (err) {

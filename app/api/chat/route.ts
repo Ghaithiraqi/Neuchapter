@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
 import { calculateCost } from '@/lib/utils';
 import { getCurrentMilestone } from '@/lib/milestones';
+import { searchKnowledge } from '@/lib/knowledge';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── تحميل سياق المستخدم بالتوازي ──────────────────────────────────────
-    const [activeStreak, journals, urgesCount, userSettings] = await Promise.all([
+    const [activeStreak, journals, urgesCount, userSettings, knowledgeResults] = await Promise.all([
       db.streak.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }),
       db.journalEntry.findMany({
         take: 3,
@@ -153,6 +154,7 @@ export async function POST(req: NextRequest) {
         where: { timestamp: { gte: new Date(Date.now() - 7 * 86400000) } },
       }),
       db.userSettings.findUnique({ where: { id: 1 }, select: { name: true, profileSummary: true } }),
+      searchKnowledge(message, { minSimilarity: 0.27, limit: 2 }).catch(() => [] as Awaited<ReturnType<typeof searchKnowledge>>),
     ]);
 
     const userName = userSettings?.name?.trim() || 'غيث';
@@ -188,7 +190,27 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
 - عدد اللحظات الصعبة هذا الأسبوع: ${urgesCount}`
         : '';
 
-    const systemPrompt = [modePrompt || buildBasePrompt(userName, userSettings?.profileSummary), contextBlock].filter(Boolean).join('\n');
+    // ── كتلة المعرفة (RAG) — اختيارية: تُضاف فقط حين توجد نتائج فوق العتبة ──
+    const ragBlock = knowledgeResults.length > 0
+      ? `\n[معرفة علمية من مكتبة مرجعية — استخدمها إن كانت ذات صلة بالسؤال]:\n` +
+        knowledgeResults
+          .map(r => `【${r.bookTitle} — ${r.unitTitle}】\n${r.content.slice(0, 500)}`)
+          .join('\n\n')
+      : '';
+
+    // ── تعليمات الأسلوب — دائمة ──────────────────────────────────────────────
+    const styleBlock = `\n[تعليمات الأسلوب]:
+- استخدم المعرفة من المكتبة المرجعية حين تكون ذات صلة بالسؤال، واذكر الكتاب المصدر بشكل طبيعي (مثلًا: كما يوضح مبدأ من العادات الذرية...).
+- إن لم تكن المعرفة المرفقة ذات صلة بالسؤال، تجاهلها تمامًا وأجب من فهمك العام بشكل طبيعي.
+- لا تُجبر ربطًا غير موجود، ولا تقل إنك تبحث في مكتبة.`;
+
+    // ── ترتيب الـ system prompt: شخصية → ملف شخصي → سياق → معرفة → أسلوب ──
+    const systemPrompt = [
+      modePrompt || buildBasePrompt(userName, userSettings?.profileSummary),
+      contextBlock,
+      ragBlock,
+      styleBlock,
+    ].filter(Boolean).join('\n');
 
     // ─── الجلسة ──────────────────────────────────────────────────────────────
     let session;

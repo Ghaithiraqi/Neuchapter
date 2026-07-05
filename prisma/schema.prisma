@@ -143,3 +143,17 @@ model UsageLog {
   estimatedCost Float
   createdAt     DateTime @default(now())
 }
+
+// قاعدة المعرفة — مقاطع الكتب مع تضمينات دلالية
+model KnowledgeChunk {
+  id         String                      @id @default(cuid())
+  bookSlug   String
+  bookTitle  String
+  unitNumber Int
+  unitTitle  String
+  content    String                      @db.Text
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime                    @default(now())
+
+  @@unique([bookSlug, unitNumber])
+}
