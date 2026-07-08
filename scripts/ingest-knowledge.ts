@@ -32,17 +32,17 @@ const BOOKS = [
   {
     slug:  'atomic_habits',
     title: 'العادات الذرية (Atomic Habits)',
-    file:  'atomic_habits_kb.md',
+    file:  'atomic_habits_kb_v2.md',
   },
   {
     slug:  'seven_habits',
     title: 'العادات السبع للناس الأكثر فعالية (The 7 Habits)',
-    file:  'seven_habits_kb.md',
+    file:  'seven_habits_kb_v2.md',
   },
   {
     slug:  'your_brain_on_porn',
     title: 'عقلك على الإباحية (Your Brain on Porn)',
-    file:  'your_brain_on_porn_kb.md',
+    file:  'recovery_science_kb_v2.md',
   },
 ] as const
 
@@ -120,8 +120,19 @@ async function main() {
   `
   console.log('    ✓ جاهز')
 
-  // ٢. تقطيع الملفات
-  console.log('\n[٢] تقطيع الملفات...')
+  // ٢. حذف المقاطع القديمة للكتب الثلاثة
+  console.log('\n[٢] حذف المقاطع القديمة...')
+  const slugsToDelete = BOOKS.map(b => b.slug)
+  for (const slug of slugsToDelete) {
+    const deleted = await sql`
+      DELETE FROM "KnowledgeChunk" WHERE "bookSlug" = ${slug}
+    `
+    console.log(`    حُذف: ${slug}`)
+  }
+  console.log('    ✓ اكتمل الحذف')
+
+  // ٣. تقطيع الملفات
+  console.log('\n[٣] تقطيع الملفات...')
   const allChunks: Chunk[] = []
 
   for (const book of BOOKS) {
@@ -134,8 +145,8 @@ async function main() {
 
   console.log(`    الإجمالي: ${allChunks.length} مقطع`)
 
-  // ٣. توليد التضمينات (دفعة واحدة)
-  console.log('\n[٣] توليد التضمينات (text-embedding-3-large)...')
+  // ٤. توليد التضمينات (دفعة واحدة)
+  console.log('\n[٤] توليد التضمينات (text-embedding-3-large)...')
 
   // نصّ الإدخال: عنوان الكتاب + عنوان الوحدة + المحتوى
   const inputs = allChunks.map(c =>
@@ -154,8 +165,8 @@ async function main() {
   const costUsd     = (totalTokens / 1_000_000) * 0.13
   console.log(`    ✓ ${allChunks.length} تضمين — ${totalTokens} رمز — $${costUsd.toFixed(6)}`)
 
-  // ٤. Upsert في قاعدة البيانات
-  console.log('\n[٤] حفظ في قاعدة البيانات...')
+  // ٥. INSERT في قاعدة البيانات
+  console.log('\n[٥] حفظ في قاعدة البيانات...')
   const bookCounts: Record<string, number> = {}
 
   for (let i = 0; i < allChunks.length; i++) {
@@ -199,7 +210,7 @@ async function main() {
   console.log(LINE)
 
   // ٦. التحقق من قاعدة البيانات
-  console.log('\n[٥] التحقق...')
+  console.log('\n[٦] التحقق...')
 
   const stats = await sql`
     SELECT
