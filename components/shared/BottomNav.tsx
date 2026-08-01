@@ -47,6 +47,7 @@ export function BottomNav() {
 
   return (
     <div
+      className="safe-bottom"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -56,7 +57,8 @@ export function BottomNav() {
         maxWidth: 420,
         background: 'var(--bg-card)',
         borderTop: '1px solid var(--border-soft)',
-        padding: '8px 12px 20px',
+        padding: '8px 12px 0',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         display: 'flex',
         justifyContent: 'space-around',
         zIndex: 100,

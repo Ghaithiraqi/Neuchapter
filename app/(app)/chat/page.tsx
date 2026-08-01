@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 import { useVoiceRecorder } from '@/lib/hooks/useVoiceRecorder';
 
 // ─── Chat Modes ────────────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ const CHAT_MODES = [
     id: 'support',
     name: 'وضع صعب',
     icon: '🌧️',
-    color: '#A78BFA',
+    color: 'var(--accent-purple)',
     systemPrompt:
       'أنت مرشد داعم وحاني. المستخدم يمر بلحظة صعبة. كن قصيراً، دافئاً، تجنب الأسئلة الكثيرة. ركّز على الاحتواء والتطمين. لا تعطه نصائح إلا لو طلب.',
   },
@@ -20,7 +20,7 @@ const CHAT_MODES = [
     id: 'reflect',
     name: 'أحتاج أفكر',
     icon: '🤔',
-    color: '#7FA88C',
+    color: 'var(--accent-emerald)',
     systemPrompt:
       'أنت معالج CBT. ساعد المستخدم يفكك أفكاره بأسئلة سقراطية عميقة. اسأل سؤال واحد قوي في كل رد. ركّز على: ما الفكرة؟ ما الدليل؟ ما البديل؟',
   },
@@ -28,7 +28,7 @@ const CHAT_MODES = [
     id: 'motivate',
     name: 'أحتاج تحفيز',
     icon: '💪',
-    color: '#E8B872',
+    color: 'var(--gold-primary)',
     systemPrompt:
       'أنت كوتش قوي ومباشر. المستخدم يحتاج طاقة وحماس. كن واضحاً، مباشراً، استخدم لغة قوية لكن إيجابية. ذكّره بإنجازاته وقدراته.',
   },
@@ -36,7 +36,7 @@ const CHAT_MODES = [
     id: 'analyze',
     name: 'حلل لحظة',
     icon: '📝',
-    color: '#6B95C9',
+    color: 'var(--accent-blue)',
     systemPrompt:
       'أنت محلل سلوكي. المستخدم يريد تفكيك تجربة معينة. اسأل عن: السياق، المحفز، الأفكار، المشاعر، السلوك، النتيجة. ساعده يرى الأنماط.',
   },
@@ -66,7 +66,7 @@ const SLASH_CMDS = [
   { cmd: '/سجل', desc: 'سجّل النص كمذكرة' },
   { cmd: '/طوارئ', desc: 'افتح صفحة الطوارئ' },
   { cmd: '/تنفس', desc: 'دائرة التنفس' },
-  { cmd: '/تأمل', desc: 'تأمل ٥ دقائق' },
+  { cmd: '/تأمل', desc: 'تأمل 5 دقائق' },
   { cmd: '/تحليل', desc: 'افتح التقارير' },
   { cmd: '/حفظ', desc: 'احفظ آخر رد لكلود' },
   { cmd: '/محادثات', desc: 'عرض المحادثات السابقة' },
@@ -117,13 +117,13 @@ function BreathingModal({ onClose }: { onClose: () => void }) {
   }, []);
 
   const phaseText = { in: 'شهيق', hold: 'احتفظ', out: 'زفير' };
-  const phaseColor = { in: '#7FA88C', hold: '#E8B872', out: '#A78BFA' };
+  const phaseColor = { in: 'var(--accent-emerald)', hold: 'var(--gold-primary)', out: 'var(--accent-purple)' };
   const phaseScale = { in: 1.3, hold: 1.3, out: 0.85 };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,26,26,0.92)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>
-        التنفس العميق — الجولة {toArabicNumerals(round)}
+        التنفس العميق — الجولة {toEnglishNumerals(round)}
       </div>
       <div
         style={{
@@ -142,7 +142,7 @@ function BreathingModal({ onClose }: { onClose: () => void }) {
         }}
       >
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: phaseColor[phase] }}>
-          {toArabicNumerals(count)}
+          {toEnglishNumerals(count)}
         </div>
         <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: phaseColor[phase] }}>
           {phaseText[phase]}
@@ -181,8 +181,8 @@ function MeditationModal({ onClose }: { onClose: () => void }) {
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.8, maxWidth: 280 }}>
         أغمض عينيك، ركّز على أنفاسك. دع الأفكار تمر دون أن تتعلق بها.
       </p>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 52, color: seconds > 0 ? 'var(--gold-primary)' : '#7FA88C', fontWeight: 700 }}>
-        {seconds > 0 ? `${toArabicNumerals(m)}:${s.toString().padStart(2, '0').replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d])}` : 'انتهى ✓'}
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 52, color: seconds > 0 ? 'var(--gold-primary)' : 'var(--accent-emerald)', fontWeight: 700 }}>
+        {seconds > 0 ? `${toEnglishNumerals(m)}:${s.toString().padStart(2, '0')}` : 'انتهى ✓'}
       </div>
       <div style={{ display: 'flex', gap: 10 }}>
         <button
@@ -788,7 +788,7 @@ function ChatContent() {
             {hour < 12 ? '🌅 كلود يريد سؤالك عن يومك' : '🌙 كيف كان يومك؟'}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => startCheckin(hour < 12 ? 'morning' : 'evening')} style={{ padding: '6px 14px', background: 'var(--gold-primary)', border: 'none', borderRadius: 20, color: '#1A3D3D', fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => startCheckin(hour < 12 ? 'morning' : 'evening')} style={{ padding: '6px 14px', background: 'var(--gold-primary)', border: 'none', borderRadius: 20, color: 'var(--bg-deep)', fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               ابدأ {hour < 12 ? 'check-in الصباحي' : 'check-in المسائي'}
             </button>
             <button onClick={() => { setShowCheckin(false); localStorage.setItem('jaddidni_checkin', new Date().toISOString().split('T')[0]); }} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid var(--border-mid)', borderRadius: 20, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 12, cursor: 'pointer' }}>
@@ -1140,7 +1140,7 @@ function ChatContent() {
               transition: 'all 0.2s',
             }}
           >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke={loading || !input.trim() ? 'var(--text-muted)' : '#1A3D3D'}>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke={loading || !input.trim() ? 'var(--text-muted)' : 'var(--bg-deep)'}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
             </svg>
           </button>

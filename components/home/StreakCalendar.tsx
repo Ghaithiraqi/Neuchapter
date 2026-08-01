@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 
 const MONTHS_AR = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -95,14 +95,14 @@ export function StreakCalendar({ streaks }: Props) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const dayStyles: Record<DayType, React.CSSProperties> = {
-    active: { background: 'var(--gold-primary)', color: '#1A3D3D', fontWeight: 700 },
-    completed: { background: 'rgba(127, 168, 140, 0.35)', color: '#7FA88C', fontWeight: 600 },
+    active: { background: 'var(--gold-primary)', color: 'var(--bg-deep)', fontWeight: 700 },
+    completed: { background: 'rgba(46, 190, 128, 0.18)', color: 'var(--accent-emerald)', fontWeight: 600 },
     relapse: { background: 'rgba(216,90,48,0.15)', color: 'var(--alert-warm)', fontWeight: 600 },
     today: {
       background: 'var(--gold-primary)',
-      color: '#1A3D3D',
+      color: 'var(--bg-deep)',
       fontWeight: 700,
-      boxShadow: '0 0 0 2px var(--gold-deep), 0 0 12px rgba(232,184,114,0.5)',
+      boxShadow: '0 0 0 2px var(--gold-deep), 0 0 12px rgba(46,190,128,0.5)',
     },
     future: { color: 'rgba(107,128,128,0.35)' },
     empty: { color: 'var(--text-muted)', opacity: 0.3 },
@@ -149,7 +149,7 @@ export function StreakCalendar({ streaks }: Props) {
               fontWeight: 600,
             }}
           >
-            {MONTHS_AR[viewMonth]} {toArabicNumerals(viewYear)}
+            {MONTHS_AR[viewMonth]} {toEnglishNumerals(viewYear)}
           </div>
           {!isCurrentMonth && (
             <button
@@ -237,7 +237,7 @@ export function StreakCalendar({ streaks }: Props) {
                 ...style,
               }}
             >
-              {toArabicNumerals(day)}
+              {toEnglishNumerals(day)}
               {dtype === 'relapse' && (
                 <div
                   style={{

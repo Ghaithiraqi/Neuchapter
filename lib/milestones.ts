@@ -56,7 +56,7 @@ export const MILESTONES = [
     name: 'شهر = عادة جديدة',
     nameEn: 'New Habit',
     badge: '⭐',
-    color: '#E8B872',
+    color: 'var(--gold-primary)',
     science:
       'بعد 30 يوماً، الـ neural pathways الجديدة تثبت بقوة. السلوك الجديد يصبح تلقائياً، ويحتاج جهداً أقل بكثير من الأسبوع الأول.',
     quote: 'ثلاثون يوماً تكفي لخلق إنسان جديد داخلك.',
@@ -82,13 +82,13 @@ export const MILESTONES = [
     name: 'تغيّر دائم في الدماغ',
     nameEn: 'Permanent Change',
     badge: '💠',
-    color: '#A78BFA',
+    color: 'var(--accent-purple)',
     science:
       'تسعون يوماً هي المدة العلمية المعتمدة لإحداث neuroplasticity كاملة. الدوائر العصبية القديمة تضعف بشكل كبير، والجديدة تترسخ.',
     quote: 'تسعون يوماً هي حرية حقيقية. ما بعدها، العودة تصبح خياراً صعباً، لا غريزة.',
     source: 'Norman Doidge - The Brain That Changes Itself',
     motivation: 'لقد أعدت تشكيل دماغك. هذا إنجاز يستحق احترام عميق لذاتك.',
-    preMessage: 'أيام وتصل لأهم محطة علمياً. ٩٠ يوم = دماغ جديد فعلاً.',
+    preMessage: 'أيام وتصل لأهم محطة علمياً. 90 يوم = دماغ جديد فعلاً.',
   },
   {
     days: 180,
@@ -108,7 +108,7 @@ export const MILESTONES = [
     name: 'السنة',
     nameEn: 'One Year',
     badge: '👑',
-    color: '#E8B872',
+    color: 'var(--gold-primary)',
     science:
       'سنة كاملة تعني أنك أعدت بناء حياتك من الصفر. عاداتك، علاقاتك، تركيزك، طاقتك — كلها تختلف الآن.',
     quote: 'السنة الأولى من التحرر هي البداية الحقيقية للحياة.',

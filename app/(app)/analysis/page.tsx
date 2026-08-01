@@ -12,7 +12,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 import { getCurrentMilestone, getNextMilestone, getDaysToNextMilestone } from '@/lib/milestones';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function TrendBadge({ trend, delta }: { trend: Trend; delta: number | null }) {
   if (trend === 'same') return <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>—</span>;
 
   const isUp = trend === 'up';
-  const color = isUp ? '#7FA88C' : 'var(--alert-warm)';
+  const color = isUp ? 'var(--accent-emerald)' : 'var(--alert-warm)';
   const arrow = isUp ? '↑' : '↓';
   const pct = delta !== 0 ? ` ${Math.abs(delta)}` : '';
 
@@ -126,7 +126,7 @@ function MetricCard({
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color, fontWeight: 700, lineHeight: 1 }}>
-            {typeof value === 'number' ? toArabicNumerals(value) : value}
+            {typeof value === 'number' ? toEnglishNumerals(value) : value}
           </div>
           {suffix && (
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>
@@ -154,7 +154,7 @@ function StatCard({ label, value, suffix, icon }: { label: string; value: number
     >
       <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--gold-primary)', fontWeight: 700, lineHeight: 1 }}>
-        {toArabicNumerals(value)}
+        {toEnglishNumerals(value)}
         {suffix && <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 400 }}>{suffix}</span>}
       </div>
       <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
@@ -169,7 +169,7 @@ function MoodTooltip({ active, payload, label }: { active?: boolean; payload?: {
   return (
     <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-soft)', borderRadius: 8, padding: '8px 12px', fontFamily: 'var(--font-body)', fontSize: 12 }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{label}</div>
-      <div style={{ color: 'var(--gold-primary)', fontWeight: 600 }}>مزاج: {toArabicNumerals(payload[0].value)}/٧</div>
+      <div style={{ color: 'var(--gold-primary)', fontWeight: 600 }}>مزاج: {toEnglishNumerals(payload[0].value)}/7</div>
     </div>
   );
 }
@@ -179,7 +179,7 @@ function UrgeTooltip({ active, payload, label }: { active?: boolean; payload?: {
   return (
     <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-soft)', borderRadius: 8, padding: '8px 12px', fontFamily: 'var(--font-body)', fontSize: 12 }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{label}</div>
-      <div style={{ color: 'var(--alert-warm)', fontWeight: 600 }}>{toArabicNumerals(payload[0].value)} لحظة</div>
+      <div style={{ color: 'var(--alert-warm)', fontWeight: 600 }}>{toEnglishNumerals(payload[0].value)} لحظة</div>
     </div>
   );
 }
@@ -187,7 +187,7 @@ function UrgeTooltip({ active, payload, label }: { active?: boolean; payload?: {
 // ─── Urge Log Helpers ────────────────────────────────────────────────────────
 
 const OUTCOME_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  resisted:    { label: 'قاومت',    color: '#7FA88C', bg: 'rgba(107,168,140,0.1)',  border: 'rgba(107,168,140,0.3)' },
+  resisted:    { label: 'قاومت',    color: 'var(--accent-emerald)', bg: 'rgba(46,190,128,0.1)',  border: 'rgba(46,190,128,0.3)' },
   relapsed:    { label: 'انتكست',   color: 'var(--alert-warm)', bg: 'rgba(216,90,48,0.1)',   border: 'rgba(216,90,48,0.3)' },
   distracted:  { label: 'تشتّتت',   color: 'var(--text-muted)', bg: 'rgba(107,128,128,0.08)', border: 'rgba(107,128,128,0.2)' },
 };
@@ -221,7 +221,7 @@ function IntensityDots({ value }: { value: number }) {
             height: 7,
             borderRadius: '50%',
             background: i < filled
-              ? filled >= 4 ? 'var(--alert-warm)' : filled >= 3 ? 'var(--gold-primary)' : '#7FA88C'
+              ? filled >= 4 ? 'var(--alert-warm)' : filled >= 3 ? 'var(--gold-primary)' : 'var(--accent-emerald)'
               : 'var(--border-mid)',
             transition: 'background 0.2s',
           }}
@@ -278,7 +278,7 @@ function UrgeLogSection({
               padding: '3px 10px',
             }}
           >
-            {toArabicNumerals(total)} إجمالاً
+            {toEnglishNumerals(total)} إجمالاً
           </div>
         )}
       </div>
@@ -385,7 +385,7 @@ function UrgeLogSection({
                     {/* شدة الإغراء */}
                     <IntensityDots value={log.intensity} />
                     <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)' }}>
-                      {toArabicNumerals(log.intensity)}/١٠
+                      {toEnglishNumerals(log.intensity)}/10
                     </span>
                   </div>
 
@@ -494,18 +494,18 @@ export default function AnalysisPage() {
   };
 
   const attendanceColor = (n: number) =>
-    n >= 5 ? '#7FA88C' : n >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)';
+    n >= 5 ? 'var(--accent-emerald)' : n >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)';
   const moodColor = (n: number | null) => {
     if (n == null) return 'var(--text-muted)';
-    return n >= 5 ? '#7FA88C' : n >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)';
+    return n >= 5 ? 'var(--accent-emerald)' : n >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)';
   };
 
   const periodData = data?.hourlyDistribution
     ? [
-        { name: 'ليل', label: '٠٠—٠٦', count: data.hourlyDistribution.slice(0, 6).reduce((s, h) => s + h.count, 0) },
-        { name: 'صباح', label: '٠٦—١٢', count: data.hourlyDistribution.slice(6, 12).reduce((s, h) => s + h.count, 0) },
-        { name: 'ظهر', label: '١٢—١٨', count: data.hourlyDistribution.slice(12, 18).reduce((s, h) => s + h.count, 0) },
-        { name: 'مساء', label: '١٨—٢٤', count: data.hourlyDistribution.slice(18, 24).reduce((s, h) => s + h.count, 0) },
+        { name: 'ليل', label: '00—06', count: data.hourlyDistribution.slice(0, 6).reduce((s, h) => s + h.count, 0) },
+        { name: 'صباح', label: '06—12', count: data.hourlyDistribution.slice(6, 12).reduce((s, h) => s + h.count, 0) },
+        { name: 'ظهر', label: '12—18', count: data.hourlyDistribution.slice(12, 18).reduce((s, h) => s + h.count, 0) },
+        { name: 'مساء', label: '18—24', count: data.hourlyDistribution.slice(18, 24).reduce((s, h) => s + h.count, 0) },
       ]
     : [];
 
@@ -538,7 +538,7 @@ export default function AnalysisPage() {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
             {data?.weekStart
               ? `${new Date(data.weekStart).toLocaleDateString('ar-IQ')} — ${new Date(data.weekEnd).toLocaleDateString('ar-IQ')}`
-              : 'آخر ٧ أيام'}
+              : 'آخر 7 أيام'}
           </div>
           {data && (
             <div
@@ -552,7 +552,7 @@ export default function AnalysisPage() {
                 background: 'var(--gold-faint)',
               }}
             >
-              أسبوع {toArabicNumerals(data.weekNumber)}
+              أسبوع {toEnglishNumerals(data.weekNumber)}
             </div>
           )}
         </div>
@@ -634,7 +634,7 @@ export default function AnalysisPage() {
             </div>
           ) : (
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
-              استمر — أول محطة بعد {toArabicNumerals(3 - currentDays)} أيام 🎯
+              استمر — أول محطة بعد {toEnglishNumerals(3 - currentDays)} أيام 🎯
             </div>
           )}
 
@@ -646,7 +646,7 @@ export default function AnalysisPage() {
                   المحطة القادمة
                 </div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  بعد {toArabicNumerals(daysToNext)} {daysToNext === 1 ? 'يوم' : 'أيام'}
+                  بعد {toEnglishNumerals(daysToNext)} {daysToNext === 1 ? 'يوم' : 'أيام'}
                 </div>
               </div>
               <div
@@ -660,7 +660,7 @@ export default function AnalysisPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span style={{ fontSize: 20 }}>{nextMilestoneData.badge}</span>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>
-                    {nextMilestoneData.name} — {toArabicNumerals(nextMilestoneData.days)} يوم
+                    {nextMilestoneData.name} — {toEnglishNumerals(nextMilestoneData.days)} يوم
                   </span>
                 </div>
                 {/* شريط التقدم نحو المحطة */}
@@ -676,7 +676,7 @@ export default function AnalysisPage() {
                   />
                 </div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-                  {toArabicNumerals(Math.min(nextProgress, 100))}٪ نحو المحطة
+                  {toEnglishNumerals(Math.min(nextProgress, 100))}% نحو المحطة
                 </div>
               </div>
             </div>
@@ -688,14 +688,14 @@ export default function AnalysisPage() {
       {data?.metrics && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
           <MetricCard
-            label="الحضور" value={data.metrics.attendance} suffix="/٧"
+            label="الحضور" value={data.metrics.attendance} suffix="/7"
             color={attendanceColor(data.metrics.attendance)}
             trend={data.trends.attendance} delta={data.deltas.attendance}
           />
           <MetricCard
             label="الصمود" value={data.metrics.resilience}
-            suffix={data.metrics.urgesTotal > 0 ? `/${toArabicNumerals(data.metrics.urgesTotal)}` : undefined}
-            color={data.metrics.resilience > 0 ? '#7FA88C' : 'var(--text-primary)'}
+            suffix={data.metrics.urgesTotal > 0 ? `/${toEnglishNumerals(data.metrics.urgesTotal)}` : undefined}
+            color={data.metrics.resilience > 0 ? 'var(--accent-emerald)' : 'var(--text-primary)'}
             trend={data.trends.resilience} delta={data.deltas.resilience}
           />
           <MetricCard
@@ -705,7 +705,7 @@ export default function AnalysisPage() {
           />
           <MetricCard
             label="متوسط المزاج" value={data.metrics.moodAvg ?? '—'}
-            suffix={data.metrics.moodAvg != null ? '/٧' : undefined}
+            suffix={data.metrics.moodAvg != null ? '/7' : undefined}
             color={moodColor(data.metrics.moodAvg)}
             trend={data.trends.mood} delta={data.deltas.mood}
           />
@@ -824,16 +824,16 @@ export default function AnalysisPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       fontFamily: 'var(--font-body)', fontSize: 11,
-                      color: pattern.type === 'success' ? '#7FA88C' : 'var(--gold-primary)',
-                      background: pattern.type === 'success' ? 'rgba(107,168,140,0.08)' : 'var(--gold-faint)',
+                      color: pattern.type === 'success' ? 'var(--accent-emerald)' : 'var(--gold-primary)',
+                      background: pattern.type === 'success' ? 'rgba(46,190,128,0.08)' : 'var(--gold-faint)',
                       padding: '4px 12px', borderRadius: 'var(--radius-button)',
-                      border: pattern.type === 'success' ? '1px solid rgba(107,168,140,0.2)' : '1px solid var(--border-mid)',
+                      border: pattern.type === 'success' ? '1px solid rgba(46,190,128,0.2)' : '1px solid var(--border-mid)',
                     }}
                   >
                     {pattern.type === 'success' ? '✦' : '◈'} {pattern.tag}
                   </div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
-                    دقة {toArabicNumerals(pattern.confidence)}٪
+                    دقة {toEnglishNumerals(pattern.confidence)}%
                   </div>
                 </div>
                 <div style={{ height: 2, background: 'var(--border-soft)', borderRadius: 1, marginBottom: 12, overflow: 'hidden' }}>
@@ -841,7 +841,7 @@ export default function AnalysisPage() {
                     style={{
                       height: '100%', width: `${pattern.confidence}%`,
                       background: pattern.type === 'success'
-                        ? 'linear-gradient(90deg, #7FA88C, #A8CDB8)'
+                        ? 'linear-gradient(90deg, var(--accent-emerald), var(--accent-mint))'
                         : 'linear-gradient(90deg, var(--gold-deep), var(--gold-soft))',
                       borderRadius: 1,
                     }}
@@ -894,7 +894,7 @@ export default function AnalysisPage() {
           background: generating ? 'var(--gold-faint)' : 'var(--gold-primary)',
           border: generating ? '1px solid var(--border-mid)' : 'none',
           borderRadius: 'var(--radius-button)',
-          color: generating ? 'var(--text-muted)' : '#1A3D3D',
+          color: generating ? 'var(--text-muted)' : 'var(--bg-deep)',
           fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 700,
           cursor: generating ? 'not-allowed' : 'pointer',
           marginBottom: 20, transition: 'all 0.3s ease',

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 
 interface Entry {
   id: number;
@@ -146,7 +146,7 @@ export default function JournalEntryPage() {
               >
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>المزاج</div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--gold-primary)', fontWeight: 700 }}>
-                  {toArabicNumerals(entry.mood)}/١٠
+                  {toEnglishNumerals(entry.mood)}/10
                 </div>
               </div>
             )}
@@ -161,7 +161,7 @@ export default function JournalEntryPage() {
               >
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>الطاقة</div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--gold-primary)', fontWeight: 700 }}>
-                  {toArabicNumerals(entry.energy)}/١٠
+                  {toEnglishNumerals(entry.energy)}/10
                 </div>
               </div>
             )}
@@ -175,7 +175,7 @@ export default function JournalEntryPage() {
           fontSize: 11,
           color: 'var(--text-muted)',
         }}>
-          {toArabicNumerals(entry.wordCount)} كلمة
+          {toEnglishNumerals(entry.wordCount)} كلمة
         </div>
       </div>
     </div>

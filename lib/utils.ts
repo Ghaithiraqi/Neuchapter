@@ -13,6 +13,11 @@ export function toArabicNumerals(n: number): string {
   return n.toString().replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[parseInt(d)]);
 }
 
+/** Display a number using Western/English digits (0-9) regardless of locale. */
+export function toEnglishNumerals(n: number | string): string {
+  return n.toString().replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+}
+
 export function getGreeting(hour: number): string {
   if (hour < 12) return 'صباح هادئ';
   if (hour < 17) return 'مساء النور';

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { LTR } from '@/components/shared/LTR';
+import NeuchapterLogo from '@/components/shared/NeuchapterLogo';
 
 export default function UnlockPage() {
   const [passcode, setPasscode] = useState('');
@@ -54,7 +54,7 @@ export default function UnlockPage() {
     setError(false);
   }, []);
 
-  const keys = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '', '٠', '←'];
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '←'];
   const keyValues = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '←'];
 
   return (
@@ -69,31 +69,7 @@ export default function UnlockPage() {
         background: 'var(--bg-deep)',
       }}
     >
-      {/* شعار دائري ذهبي */}
-      <div
-        style={{
-          width: 64,
-          height: 64,
-          border: '2px solid var(--gold-primary)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 20,
-          background: 'var(--gold-faint)',
-          animation: 'gentlePulse 4s ease-in-out infinite',
-          boxShadow: '0 0 24px rgba(232, 184, 114, 0.15)',
-        }}
-      >
-        <div
-          style={{
-            width: 20,
-            height: 20,
-            background: 'var(--gold-primary)',
-            borderRadius: '50%',
-          }}
-        />
-      </div>
+      <NeuchapterLogo size={72} animate={true} style={{ marginBottom: 20 }} />
 
       <h1
         style={{
@@ -105,7 +81,7 @@ export default function UnlockPage() {
           letterSpacing: 1,
         }}
       >
-        جددني
+        Neuchapter
       </h1>
 
       <p
@@ -154,6 +130,7 @@ export default function UnlockPage() {
           gap: 14,
           width: '100%',
           maxWidth: 264,
+          direction: 'ltr',
         }}
       >
         {keys.map((key, i) => {

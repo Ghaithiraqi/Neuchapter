@@ -6,25 +6,25 @@ import { ChatTab } from '@/components/home/ChatTab';
 
 const PROTOCOL_OPTIONS = [
   {
-    step: '٠١',
+    step: '01',
     title: 'تكلّم معي',
     desc: 'محادثة مفتوحة · بلا حكم',
     action: 'chat',
   },
   {
-    step: '٠٢',
+    step: '02',
     title: 'خطتي للحظات الصعبة',
-    desc: '٥ خطوات حضّرتها مسبقاً',
+    desc: '5 خطوات حضّرتها مسبقاً',
     action: 'plan',
   },
   {
-    step: '٠٣',
-    title: 'تأريض ٥-٤-٣-٢-١',
+    step: '03',
+    title: 'تأريض 5-4-3-2-1',
     desc: 'إعادة الجهاز العصبي للحاضر',
     action: 'grounding',
   },
   {
-    step: '٠٤',
+    step: '04',
     title: 'سجّل ولا تتحرك',
     desc: 'احفظ اللحظة لتحليلها لاحقاً',
     action: 'log',
@@ -32,11 +32,11 @@ const PROTOCOL_OPTIONS = [
 ];
 
 const GROUNDING_STEPS = [
-  { num: '٥', text: 'أشياء تراها الآن' },
-  { num: '٤', text: 'أشياء تلمسها' },
-  { num: '٣', text: 'أشياء تسمعها' },
-  { num: '٢', text: 'أشياء تشمّها' },
-  { num: '١', text: 'شيء تتذوقه' },
+  { num: '5', text: 'أشياء تراها الآن' },
+  { num: '4', text: 'أشياء تلمسها' },
+  { num: '3', text: 'أشياء تسمعها' },
+  { num: '2', text: 'أشياء تشمّها' },
+  { num: '1', text: 'شيء تتذوقه' },
 ];
 
 export default function SOSPage() {
@@ -73,7 +73,7 @@ export default function SOSPage() {
         maxWidth: 420,
         margin: '0 auto',
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #1A3D3D 0%, rgba(216, 90, 48, 0.04) 100%)',
+        background: 'linear-gradient(180deg, var(--bg-deep) 0%, rgba(216, 90, 48, 0.04) 100%)',
         padding: '32px 22px',
         display: 'flex',
         flexDirection: 'column',
@@ -224,7 +224,7 @@ export default function SOSPage() {
               fontWeight: 700,
             }}
           >
-            تأريض ٥-٤-٣-٢-١
+            تأريض 5-4-3-2-1
           </h3>
           {GROUNDING_STEPS.map((s, i) => (
             <div
@@ -269,7 +269,7 @@ export default function SOSPage() {
               background: 'var(--gold-primary)',
               border: 'none',
               borderRadius: 'var(--radius-button)',
-              color: '#1A3D3D',
+              color: 'var(--bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 14,
               fontWeight: 700,
@@ -304,7 +304,7 @@ export default function SOSPage() {
           >
             {logDone
               ? 'تم تسجيل اللحظة. أحسنت على المقاومة.'
-              : 'خطتك الشخصية ستكون متاحة قريباً. للآن، تنفّس مع الدائرة وانتظر ١٠ دقائق.'}
+              : 'خطتك الشخصية ستكون متاحة قريباً. للآن، تنفّس مع الدائرة وانتظر 10 دقائق.'}
           </p>
           <button
             onClick={() => { setActiveAction(null); setLogDone(false); }}
@@ -314,7 +314,7 @@ export default function SOSPage() {
               background: 'var(--gold-primary)',
               border: 'none',
               borderRadius: 'var(--radius-button)',
-              color: '#1A3D3D',
+              color: 'var(--bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 13,
               fontWeight: 700,
@@ -372,7 +372,7 @@ export default function SOSPage() {
                   style={{
                     fontFamily: 'var(--font-display)',
                     fontSize: 14,
-                    color: isDone ? '#4aa557' : 'var(--gold-primary)',
+                    color: isDone ? 'var(--accent-emerald)' : 'var(--gold-primary)',
                     fontWeight: 700,
                     width: 32,
                     flexShrink: 0,
@@ -386,7 +386,7 @@ export default function SOSPage() {
                   style={{
                     width: 1,
                     height: 30,
-                    background: isDone ? 'rgba(74,165,87,0.35)' : 'var(--border-mid)',
+                    background: isDone ? 'rgba(46,190,128,0.35)' : 'var(--border-mid)',
                     flexShrink: 0,
                     transition: 'background 0.3s ease',
                   }}
@@ -396,7 +396,7 @@ export default function SOSPage() {
                     style={{
                       fontFamily: 'var(--font-body)',
                       fontSize: 15,
-                      color: isDone ? '#4aa557' : 'var(--text-primary)',
+                      color: isDone ? 'var(--accent-emerald)' : 'var(--text-primary)',
                       marginBottom: 3,
                       fontWeight: 500,
                       transition: 'color 0.3s ease',
@@ -552,7 +552,7 @@ function ChatTabSOS() {
             flexShrink: 0,
           }}
         >
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="#1A3D3D">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="var(--bg-deep)">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
         </button>

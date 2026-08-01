@@ -63,7 +63,7 @@ export default function HistoryPage() {
         </div>
         <button
           onClick={() => router.push('/chat')}
-          style={{ padding: '9px 18px', background: 'var(--gold-primary)', border: 'none', borderRadius: 50, color: '#1A3D3D', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '9px 18px', background: 'var(--gold-primary)', border: 'none', borderRadius: 50, color: 'var(--bg-deep)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           ＋ جديدة
         </button>

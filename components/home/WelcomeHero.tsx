@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getGreeting, formatArabicDate, toArabicNumerals } from '@/lib/utils';
+import { getGreeting, formatArabicDate, toEnglishNumerals } from '@/lib/utils';
 
 interface Tip {
   content: string;
@@ -9,7 +9,7 @@ interface Tip {
 }
 
 const DEFAULT_TIP: Tip = {
-  content: 'الدماغ في الصباح أصفى ٣ مرات. اجعل أصعب قرار اليوم في أول ساعتين بعد الاستيقاظ.',
+  content: 'الدماغ في الصباح أصفى 3 مرات. اجعل أصعب قرار اليوم في أول ساعتين بعد الاستيقاظ.',
   source: 'مبدأ CBT · علم الأعصاب السلوكي',
 };
 
@@ -151,7 +151,7 @@ export function WelcomeHero() {
             background: 'var(--gold-faint)',
           }}
         >
-          اليوم {toArabicNumerals(dayNum)}
+          اليوم {toEnglishNumerals(dayNum)}
         </span>
       </div>
 

@@ -88,7 +88,7 @@ export function UnifiedSection() {
                 borderRadius: 'var(--radius-button)',
                 fontFamily: 'var(--font-body)',
                 fontSize: 13,
-                color: isActive ? '#1A3D3D' : 'var(--text-secondary)',
+                color: isActive ? 'var(--bg-deep)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 transition: 'all 0.25s ease',
                 display: 'flex',

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 
 interface Metrics {
   attendance: number;
@@ -97,8 +97,8 @@ export function ReportCard() {
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
               الحضور هذا الأسبوع
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: metrics.attendance >= 5 ? '#7FA88C' : metrics.attendance >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)' }}>
-              {toArabicNumerals(metrics.attendance)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}>/٧</span>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: metrics.attendance >= 5 ? 'var(--accent-emerald)' : metrics.attendance >= 3 ? 'var(--gold-soft)' : 'var(--alert-warm)' }}>
+              {toEnglishNumerals(metrics.attendance)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}>/7</span>
             </div>
           </div>
 
@@ -115,8 +115,8 @@ export function ReportCard() {
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
                 تجاوزت
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#7FA88C' }}>
-                {toArabicNumerals(metrics.resilience)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}> لحظة</span>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--accent-emerald)' }}>
+                {toEnglishNumerals(metrics.resilience)}<span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400 }}> لحظة</span>
               </div>
             </div>
           )}
@@ -132,7 +132,7 @@ export function ReportCard() {
           background: 'var(--gold-primary)',
           border: 'none',
           borderRadius: 'var(--radius-button)',
-          color: '#1A3D3D',
+          color: 'var(--bg-deep)',
           fontFamily: 'var(--font-body)',
           fontSize: 14,
           fontWeight: 700,

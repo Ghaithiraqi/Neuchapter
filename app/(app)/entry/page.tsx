@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 
 type TabId = 'write' | 'voice';
 
@@ -105,7 +105,7 @@ function WriteSection({ onSaved }: { onSaved: () => void }) {
             <span style={{ fontSize: 12, color: 'var(--alert-warm)', fontFamily: 'var(--font-body)' }}>{error}</span>
           ) : (
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
-              {toArabicNumerals(text.length)} حرف
+              {toEnglishNumerals(text.length)} حرف
             </span>
           )}
           <button
@@ -116,7 +116,7 @@ function WriteSection({ onSaved }: { onSaved: () => void }) {
               background: saved ? 'rgba(107,168,140,0.3)' : text.length < 10 ? 'var(--gold-faint)' : 'var(--gold-primary)',
               border: text.length < 10 ? '1px solid var(--border-mid)' : 'none',
               borderRadius: 'var(--radius-button)',
-              color: saved ? '#7FA88C' : text.length < 10 ? 'var(--text-muted)' : '#1A3D3D',
+              color: saved ? 'var(--accent-emerald)' : text.length < 10 ? 'var(--text-muted)' : 'var(--bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 13,
               fontWeight: 700,
@@ -240,7 +240,7 @@ function VoiceSection({ onSaved }: { onSaved: () => void }) {
           }}
         >
           {transcript}
-          <div style={{ marginTop: 8, fontSize: 12, color: saveState === 'saved' ? '#7FA88C' : saveState === 'error' ? 'var(--alert-warm)' : 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
+          <div style={{ marginTop: 8, fontSize: 12, color: saveState === 'saved' ? 'var(--accent-emerald)' : saveState === 'error' ? 'var(--alert-warm)' : 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
             {saveState === 'saved' ? 'تم الحفظ ✓' : saveState === 'saving' ? 'جاري الحفظ...' : saveState === 'error' ? 'فشل الحفظ' : ''}
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function EntryPage() {
                 padding: '9px', background: tab === t.id ? 'var(--gold-primary)' : 'transparent',
                 border: 'none', borderRadius: 50,
                 fontFamily: 'var(--font-body)', fontSize: 13,
-                color: tab === t.id ? '#1A3D3D' : 'var(--text-secondary)',
+                color: tab === t.id ? 'var(--bg-deep)' : 'var(--text-secondary)',
                 cursor: 'pointer', fontWeight: tab === t.id ? 700 : 400,
                 transition: 'all 0.2s',
               }}
@@ -338,7 +338,7 @@ export default function EntryPage() {
                   </div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                     {formatDate(e.createdAt)}
-                    {e.mood != null && ` · مزاج ${e.mood}/٧`}
+                    {e.mood != null && ` · مزاج ${e.mood}/7`}
                   </div>
                 </div>
               </div>

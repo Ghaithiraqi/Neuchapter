@@ -87,7 +87,7 @@ export function VoiceTab() {
   }[status];
 
   const statusHint = {
-    idle: 'مدّة قصوى ٥ دقائق',
+    idle: 'مدّة قصوى 5 دقائق',
     recording: 'اضغط للإيقاف',
     processing: 'لحظة...',
     done: 'تم الحفظ تلقائياً',
@@ -235,7 +235,7 @@ export function VoiceTab() {
             <span style={{
               fontSize: 12,
               fontFamily: 'var(--font-body)',
-              color: saveState === 'saved' ? '#7FA88C'
+              color: saveState === 'saved' ? 'var(--accent-emerald)'
                 : saveState === 'error' ? 'var(--alert-warm)'
                 : 'var(--text-muted)',
             }}>
@@ -253,7 +253,7 @@ export function VoiceTab() {
                   background: 'var(--gold-primary)',
                   border: 'none',
                   borderRadius: 'var(--radius-button)',
-                  color: '#1A3D3D',
+                  color: 'var(--bg-deep)',
                   fontFamily: 'var(--font-body)',
                   fontSize: 12,
                   fontWeight: 700,

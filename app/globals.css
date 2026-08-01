@@ -2,20 +2,20 @@
 
 @theme {
   /* Backgrounds */
-  --color-bg-deep: #1A3D3D;
-  --color-bg-card: #1F4747;
-  --color-bg-elevated: #245151;
-  --color-bg-input: #0F2929;
+  --color-bg-deep: #111626;
+  --color-bg-card: #171D33;
+  --color-bg-elevated: #1E2540;
+  --color-bg-input: #0D1220;
 
-  /* Gold */
-  --color-gold-primary: #E8B872;
-  --color-gold-soft: #F4C97A;
-  --color-gold-deep: #C99850;
+  /* Accent (emerald — keeps gold-* names for compatibility) */
+  --color-gold-primary: #2EBE80;
+  --color-gold-soft: #5DCDA5;
+  --color-gold-deep: #259696;
 
   /* Text */
-  --color-text-primary: #F5F1E8;
-  --color-text-secondary: #B8C5C5;
-  --color-text-muted: #6B8080;
+  --color-text-primary: #EAF2EE;
+  --color-text-secondary: #A8B8C4;
+  --color-text-muted: #6B7A8C;
 
   /* Alert */
   --color-alert-warm: #D85A30;
@@ -38,27 +38,35 @@
 
 :root {
   /* Backgrounds */
-  --bg-deep: #1A3D3D;
-  --bg-card: #1F4747;
-  --bg-elevated: #245151;
-  --bg-input: #0F2929;
+  --bg-deep: #111626;
+  --bg-card: #171D33;
+  --bg-elevated: #1E2540;
+  --bg-input: #0D1220;
 
-  /* Gold */
-  --gold-primary: #E8B872;
-  --gold-soft: #F4C97A;
-  --gold-deep: #C99850;
-  --gold-muted: rgba(232, 184, 114, 0.15);
-  --gold-faint: rgba(232, 184, 114, 0.08);
+  /* Accent (emerald — keeps gold-* names for compatibility) */
+  --gold-primary: #2EBE80;
+  --gold-soft: #5DCDA5;
+  --gold-deep: #259696;
+  --gold-muted: rgba(46, 190, 128, 0.15);
+  --gold-faint: rgba(46, 190, 128, 0.08);
 
   /* Text */
-  --text-primary: #F5F1E8;
-  --text-secondary: #B8C5C5;
-  --text-muted: #6B8080;
+  --text-primary: #EAF2EE;
+  --text-secondary: #A8B8C4;
+  --text-muted: #6B7A8C;
 
   /* Borders */
-  --border-soft: rgba(232, 184, 114, 0.12);
-  --border-mid: rgba(232, 184, 114, 0.2);
-  --border-strong: rgba(232, 184, 114, 0.35);
+  --border-soft: rgba(46, 190, 128, 0.12);
+  --border-mid: rgba(46, 190, 128, 0.2);
+  --border-strong: rgba(46, 190, 128, 0.35);
+
+  /* Semantic accent tokens */
+  --accent-emerald: #2EBE80;
+  --accent-teal: #259696;
+  --accent-blue: #376EC8;
+  --accent-purple: #4A3CB4;
+  --accent-mint: #5DCDA5;
+  --brand-gradient: linear-gradient(45deg, #2EBE80 0%, #259696 42%, #376EC8 68%, #4A3CB4 100%);
 
   /* Fonts */
   --font-display: 'Playfair Display', 'Reem Kufi', serif;
@@ -76,22 +84,22 @@
   --alert-glow: rgba(216, 90, 48, 0.15);
 
   /* Legacy aliases — keep so unmodified components still work */
-  --night-deepest: #1A3D3D;
-  --night-deep: #1F4747;
-  --card-bg: #1F4747;
-  --card-bg-elevated: #245151;
-  --card-bg-soft: #245151;
-  --card-hover: #2A5B5B;
-  --ink-primary: #F5F1E8;
-  --ink-secondary: #B8C5C5;
-  --ink-muted: #6B8080;
-  --ink-faint: rgba(232, 184, 114, 0.2);
-  --therapy-blue: #E8B872;
-  --therapy-blue-bright: #F4C97A;
-  --therapy-blue-soft: #C99850;
-  --therapy-blue-glow: rgba(232, 184, 114, 0.2);
-  --clinical-green: #B8C5C5;
-  --clinical-green-soft: #6B8080;
+  --night-deepest: #111626;
+  --night-deep: #171D33;
+  --card-bg: #171D33;
+  --card-bg-elevated: #1E2540;
+  --card-bg-soft: #1E2540;
+  --card-hover: #252D47;
+  --ink-primary: #EAF2EE;
+  --ink-secondary: #A8B8C4;
+  --ink-muted: #6B7A8C;
+  --ink-faint: rgba(46, 190, 128, 0.2);
+  --therapy-blue: #2EBE80;
+  --therapy-blue-bright: #5DCDA5;
+  --therapy-blue-soft: #259696;
+  --therapy-blue-glow: rgba(46, 190, 128, 0.2);
+  --clinical-green: #A8B8C4;
+  --clinical-green-soft: #6B7A8C;
   --alert-soft: #B04820;
 }
 
@@ -101,7 +109,7 @@
 }
 
 @keyframes gentlePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 184, 114, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 190, 128, 0.25); }
   50% { box-shadow: 0 0 0 16px transparent; }
 }
 
@@ -159,4 +167,47 @@ html, body {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  /* prevent pull-to-refresh and overscroll bounce */
+  overscroll-behavior-y: none;
+  /* remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Mobile UX foundations ──────────────────────────────────────────────── */
+
+/* Momentum scrolling on all scrollable containers */
+[data-scroll], .overflow-y-auto, .overflow-y-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Press feedback on all interactive elements */
+button, [role="button"], a {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+button:active, [role="button"]:active, a:active {
+  transform: scale(0.96);
+}
+
+/* No text selection on interactive UI controls */
+button, [role="button"], nav, label {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Safe-area insets — bottom nav and fixed footers */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

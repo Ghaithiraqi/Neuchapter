@@ -1,6 +1,6 @@
 {
-  "name": "جددني",
-  "short_name": "جددني",
+  "name": "Neuchapter",
+  "short_name": "Neuchapter",
   "description": "رحلة العودة لذاتك",
   "lang": "ar",
   "dir": "rtl",
@@ -8,8 +8,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#080C18",
-  "theme_color": "#6B95C9",
+  "background_color": "#111626",
+  "theme_color": "#111626",
   "icons": [
     {
       "src": "/icons/icon-192.png",

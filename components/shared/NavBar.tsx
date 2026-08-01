@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NeuchapterLogo from '@/components/shared/NeuchapterLogo';
 
 export function NavBar() {
   const router = useRouter();
@@ -24,41 +25,8 @@ export function NavBar() {
         zIndex: 2,
       }}
     >
-      {/* شعار + اسم */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div
-          style={{
-            width: 30,
-            height: 30,
-            border: '1.5px solid var(--gold-primary)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--gold-faint)',
-          }}
-        >
-          <div
-            style={{
-              width: 9,
-              height: 9,
-              background: 'var(--gold-primary)',
-              borderRadius: '50%',
-            }}
-          />
-        </div>
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: 20,
-            color: 'var(--text-primary)',
-            letterSpacing: 0.5,
-          }}
-        >
-          جددني
-        </span>
-      </div>
+      {/* شعار */}
+      <NeuchapterLogo size={36} />
 
       {/* الجانب الأيسر: المكتبة + الإعدادات + القفل */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 import {
   getCurrentMilestone,
   getNextMilestone,
@@ -227,7 +227,7 @@ function DatePickerModal({
               background: 'var(--gold-primary)',
               border: 'none',
               borderRadius: 'var(--radius-button)',
-              color: '#1A3D3D',
+              color: 'var(--bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 14,
               fontWeight: 700,
@@ -360,7 +360,7 @@ function MilestonePopup({
             background: milestone.color,
             border: 'none',
             borderRadius: 'var(--radius-button)',
-            color: '#1A3D3D',
+            color: 'var(--bg-deep)',
             fontFamily: 'var(--font-body)',
             fontSize: 15,
             fontWeight: 700,
@@ -508,7 +508,7 @@ export function StreakCircle() {
               }}
             >
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>
-                {toArabicNumerals(days)}
+                {toEnglishNumerals(days)}
               </div>
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--gold-primary)', marginTop: 2 }}>
                 يوم
@@ -536,10 +536,10 @@ export function StreakCircle() {
             )}
 
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4, lineHeight: 1.4 }}>
-              نحو محطة {toArabicNumerals(nextMilestone)} يوم
+              نحو محطة {toEnglishNumerals(nextMilestone)} يوم
             </div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
-              باقي {toArabicNumerals(remaining)} {remaining === 1 ? 'يوم' : 'أيام'} · أنت في {toArabicNumerals(pct)}٪
+              باقي {toEnglishNumerals(remaining)} {remaining === 1 ? 'يوم' : 'أيام'} · أنت في {toEnglishNumerals(pct)}%
             </div>
 
             {/* شريط التقدم */}
@@ -564,7 +564,7 @@ export function StreakCircle() {
                   background: streak.insuranceUsed ? 'rgba(107,128,128,0.1)' : 'rgba(167,139,250,0.1)',
                   border: `1px solid ${streak.insuranceUsed ? 'var(--border-soft)' : 'rgba(167,139,250,0.3)'}`,
                   borderRadius: 8,
-                  color: streak.insuranceUsed ? 'var(--text-muted)' : '#A78BFA',
+                  color: streak.insuranceUsed ? 'var(--text-muted)' : 'var(--accent-purple)',
                   fontFamily: 'var(--font-body)',
                   fontSize: 11,
                   padding: '4px 10px',
@@ -596,7 +596,7 @@ export function StreakCircle() {
             }}
           >
             <span style={{ color: nextMilestoneData.color, fontWeight: 700 }}>
-              {nextMilestoneData.badge} بعد {toArabicNumerals(daysToNext)} {daysToNext === 1 ? 'يوم' : 'أيام'}:
+              {nextMilestoneData.badge} بعد {toEnglishNumerals(daysToNext)} {daysToNext === 1 ? 'يوم' : 'أيام'}:
             </span>{' '}
             {nextMilestoneData.preMessage}
           </div>

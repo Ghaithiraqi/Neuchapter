@@ -32,7 +32,7 @@ const TIMEZONES = [
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
   const period = i < 12 ? 'ص' : 'م';
-  const display = i === 0 ? `١٢ ${period}` : i < 13 ? `${i} ${period}` : `${i - 12} ${period}`;
+  const display = i === 0 ? `12 ${period}` : i < 13 ? `${i} ${period}` : `${i - 12} ${period}`;
   return { value: i, label: display };
 });
 
@@ -128,7 +128,7 @@ function Toggle({
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: checked ? '#1A3D3D' : 'var(--text-muted)',
+          background: checked ? 'var(--bg-deep)' : 'var(--text-muted)',
           transition: 'left 0.25s ease, right 0.25s ease, background 0.25s ease',
         }}
       />
@@ -720,10 +720,10 @@ export default function SettingsPage() {
           borderRadius: 'var(--radius-button)',
           color:
             saveState === 'saved'
-              ? '#7FA88C'
+              ? 'var(--accent-emerald)'
               : saveState === 'error'
               ? 'var(--alert-warm)'
-              : '#1A3D3D',
+              : 'var(--bg-deep)',
           fontFamily: 'var(--font-body)',
           fontSize: 15,
           fontWeight: 700,

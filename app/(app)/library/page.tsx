@@ -157,9 +157,9 @@ function UnitRow({
 // ─── Book Card ────────────────────────────────────────────────────────────────
 
 const BOOK_COLORS: Record<string, string> = {
-  atomic_habits:     '#E8B872',
-  seven_habits:      '#7FA88C',
-  your_brain_on_porn: '#A78BFA',
+  atomic_habits:     'var(--gold-primary)',
+  seven_habits:      'var(--accent-emerald)',
+  your_brain_on_porn: 'var(--accent-purple)',
 };
 
 function BookCard({ book, onSelect }: { book: Book; onSelect: () => void }) {

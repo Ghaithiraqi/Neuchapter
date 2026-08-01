@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { toArabicNumerals } from '@/lib/utils';
+import { toEnglishNumerals } from '@/lib/utils';
 
 export function WriteTab() {
   const [text, setText] = useState('');
@@ -115,7 +115,7 @@ export function WriteTab() {
               color: 'var(--text-muted)',
             }}
           >
-            {toArabicNumerals(text.length)} حرف
+            {toEnglishNumerals(text.length)} حرف
           </span>
 
           <button
@@ -132,10 +132,10 @@ export function WriteTab() {
               border: text.length < 10 ? '1px solid var(--border-mid)' : 'none',
               borderRadius: 'var(--radius-button)',
               color: saved
-                ? '#7FA88C'
+                ? 'var(--accent-emerald)'
                 : text.length < 10
                   ? 'var(--text-muted)'
-                  : '#1A3D3D',
+                  : 'var(--bg-deep)',
               fontFamily: 'var(--font-body)',
               fontSize: 13,
               fontWeight: 700,
