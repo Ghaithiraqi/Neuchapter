@@ -15,7 +15,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }}
     >
       <NavBar />
-      <main style={{ position: 'relative', zIndex: 1, paddingBottom: 110 }}>
+      {/* paddingBottom tracks the real measured height of the fixed bottom bar via --bottom-bar-height,
+          set by BottomNav's ResizeObserver. Falls back to 140px if JS hasn't run yet. */}
+      <main style={{ position: 'relative', zIndex: 1, paddingBottom: 'calc(var(--bottom-bar-height, 140px) + 20px)' }}>
         {children}
       </main>
       <BottomNav />

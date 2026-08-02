@@ -216,6 +216,12 @@ button, [role="button"], nav, label {
   -webkit-user-select: none;
 }
 
+/* SOS pill dot breathe animation */
+@keyframes ncBreathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.82); }
+  50%       { opacity: 1;    transform: scale(1.18); }
+}
+
 /* Safe-area insets — bottom nav and fixed footers */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);

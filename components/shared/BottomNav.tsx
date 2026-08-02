@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 // ─── Nav items (excluding centre) ────────────────────────────────────────────
@@ -92,6 +93,27 @@ function NavButton({
 
 export function BottomNav() {
   const pathname = usePathname();
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Measure the real height of the entire fixed block and write it to a CSS
+  // custom property so layout.tsx can consume it as exact padding-bottom.
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+
+    const update = () => {
+      document.documentElement.style.setProperty(
+        '--bottom-bar-height',
+        `${el.offsetHeight}px`,
+      );
+    };
+
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   function isActive(path: string) {
     return path === '/' ? pathname === '/' : pathname.startsWith(path);
@@ -99,6 +121,7 @@ export function BottomNav() {
 
   return (
     <div
+      ref={barRef}
       style={{
         position: 'fixed',
         bottom: 0,
@@ -109,30 +132,60 @@ export function BottomNav() {
         zIndex: 100,
       }}
     >
-      {/* ── Floating SOS pill ── */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 8 }}>
+      {/* ── Gradient fade — prevents content showing raw under the pill ── */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: 0,
+          right: 0,
+          height: 40,
+          background: 'linear-gradient(to bottom, transparent, #111626)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* ── SOS pill ── */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          paddingBottom: 8,
+          background: '#111626',
+        }}
+      >
         <Link
           href="/sos"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '9px 20px',
-            background: 'rgba(216,90,48,0.12)',
-            border: '1px solid rgba(216,90,48,0.35)',
-            borderRadius: 100,
+            gap: 9,
+            padding: '11px 22px',
+            minHeight: 44,
+            background: 'rgba(93,205,165,0.08)',
+            border: '1px solid rgba(93,205,165,0.3)',
+            borderRadius: 22,
             textDecoration: 'none',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
           }}
         >
-          <span style={{ fontSize: 15 }}>🆘</span>
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#5DCDA5',
+              boxShadow: '0 0 10px rgba(93,205,165,0.8)',
+              animation: 'ncBreathe 3.4s ease-in-out infinite',
+              flexShrink: 0,
+            }}
+          />
           <span
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: 13,
-              fontWeight: 600,
-              color: '#E05A2A',
+              fontWeight: 500,
+              color: '#5DCDA5',
               whiteSpace: 'nowrap',
             }}
           >
@@ -143,9 +196,8 @@ export function BottomNav() {
 
       {/* ── Nav bar ── */}
       <div
-        className="safe-bottom"
         style={{
-          background: 'rgba(17,22,38,0.95)',
+          background: 'rgba(17,22,38,0.98)',
           borderTop: '1px solid var(--border-soft)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
