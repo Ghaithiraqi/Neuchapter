@@ -216,10 +216,48 @@ button, [role="button"], nav, label {
   -webkit-user-select: none;
 }
 
-/* SOS pill dot breathe animation */
+/* ─── SOS / breathing animations ────────────────────────────────────────── */
+
+@keyframes ncScreenIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* SOS pill dot breathe */
 @keyframes ncBreathe {
   0%, 100% { opacity: 0.55; transform: scale(0.82); }
   50%       { opacity: 1;    transform: scale(1.18); }
+}
+
+/* SOS circle — outer glow expands/fades on 11s cycle */
+@keyframes ncSosGlow {
+  0%, 100% { opacity: 0.4;  transform: scale(0.85); }
+  50%       { opacity: 0.85; transform: scale(1.18); }
+}
+
+/* SOS circle — main ring inhales/exhales on 11s cycle */
+@keyframes ncSosBreathe {
+  0%, 100% { transform: scale(0.78); }
+  50%       { transform: scale(1.12); }
+}
+
+/* SOS label — "شهيق" fades in during inhale phase */
+@keyframes ncInhale {
+  0%   { opacity: 0.25; }
+  22%  { opacity: 1;    }
+  48%  { opacity: 1;    }
+  55%  { opacity: 0.1;  }
+  100% { opacity: 0.1;  }
+}
+
+/* SOS label — "زفير" fades in during exhale phase */
+@keyframes ncExhale {
+  0%   { opacity: 0.1;  }
+  50%  { opacity: 0.1;  }
+  55%  { opacity: 0.25; }
+  78%  { opacity: 1;    }
+  96%  { opacity: 1;    }
+  100% { opacity: 0.25; }
 }
 
 /* Safe-area insets — bottom nav and fixed footers */
