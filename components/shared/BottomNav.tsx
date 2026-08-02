@@ -1,8 +1,11 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-const items = [
+// ─── Nav items (excluding centre) ────────────────────────────────────────────
+
+const LEFT_ITEMS = [
   {
     label: 'الرئيسية',
     path: '/',
@@ -13,25 +16,19 @@ const items = [
     ),
   },
   {
-    label: 'المحادثة',
-    path: '/chat',
+    label: 'السجل',
+    path: '/journal',
     icon: (
       <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="22" height="22">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
       </svg>
     ),
   },
+];
+
+const RIGHT_ITEMS = [
   {
-    label: 'المذكرات',
-    path: '/entry',
-    icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="22" height="22">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'تقاريري',
+    label: 'التحليل',
     path: '/analysis',
     icon: (
       <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="22" height="22">
@@ -39,15 +36,69 @@ const items = [
       </svg>
     ),
   },
+  {
+    label: 'رحلتي',
+    path: '/settings',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" width="22" height="22">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    ),
+  },
 ];
+
+// ─── NavButton ────────────────────────────────────────────────────────────────
+
+function NavButton({
+  label, path, icon, isActive,
+}: {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  isActive: boolean;
+}) {
+  return (
+    <Link
+      href={path}
+      aria-label={label}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3,
+        padding: '8px 10px',
+        color: isActive ? '#5DCDA5' : 'var(--text-muted)',
+        textDecoration: 'none',
+        flex: 1,
+        transition: 'color 0.2s',
+      }}
+    >
+      {icon}
+      <span
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 10,
+          fontWeight: isActive ? 700 : 400,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
+// ─── BottomNav ────────────────────────────────────────────────────────────────
 
 export function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
+
+  function isActive(path: string) {
+    return path === '/' ? pathname === '/' : pathname.startsWith(path);
+  }
 
   return (
     <div
-      className="safe-bottom"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -55,54 +106,121 @@ export function BottomNav() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: 420,
-        background: 'var(--bg-card)',
-        borderTop: '1px solid var(--border-soft)',
-        padding: '8px 12px 0',
-        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-        display: 'flex',
-        justifyContent: 'space-around',
         zIndex: 100,
       }}
     >
-      {items.map((item) => {
-        const isActive =
-          item.path === '/'
-            ? pathname === '/'
-            : pathname.startsWith(item.path);
-        return (
-          <button
-            key={item.path}
-            onClick={() => router.push(item.path)}
-            aria-label={item.label}
+      {/* ── Floating SOS pill ── */}
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 8 }}>
+        <Link
+          href="/sos"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '9px 20px',
+            background: 'rgba(216,90,48,0.12)',
+            border: '1px solid rgba(216,90,48,0.35)',
+            borderRadius: 100,
+            textDecoration: 'none',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+        >
+          <span style={{ fontSize: 15 }}>🆘</span>
+          <span
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 3,
-              cursor: 'pointer',
-              padding: '8px 14px',
-              background: isActive ? 'var(--gold-faint)' : 'transparent',
-              border: isActive ? '1px solid var(--border-mid)' : '1px solid transparent',
-              borderRadius: 16,
-              color: isActive ? 'var(--gold-primary)' : 'var(--text-muted)',
-              transition: 'all 0.2s ease',
-              minWidth: 56,
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#E05A2A',
+              whiteSpace: 'nowrap',
             }}
           >
-            {item.icon}
-            <span
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 10,
-                fontWeight: isActive ? 700 : 400,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item.label}
-            </span>
-          </button>
-        );
-      })}
+            لحظة صعبة؟ أنا هنا
+          </span>
+        </Link>
+      </div>
+
+      {/* ── Nav bar ── */}
+      <div
+        className="safe-bottom"
+        style={{
+          background: 'rgba(17,22,38,0.95)',
+          borderTop: '1px solid var(--border-soft)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          paddingTop: 6,
+          paddingLeft: 4,
+          paddingRight: 4,
+          paddingBottom: 'calc(6px + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        {/* Left two items */}
+        {LEFT_ITEMS.map((item) => (
+          <NavButton
+            key={item.path}
+            {...item}
+            isActive={isActive(item.path)}
+          />
+        ))}
+
+        {/* Centre: الرفيق — raised circular button */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            flex: 1,
+            position: 'relative',
+            top: -12,
+          }}
+        >
+          <Link
+            href="/chat"
+            aria-label="الرفيق"
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #5DCDA5 0%, #259696 50%, #376EC8 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(93,205,165,0.4)',
+              textDecoration: 'none',
+              border: '2px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="white" width="22" height="22">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+          </Link>
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 10,
+              fontWeight: isActive('/chat') ? 700 : 400,
+              color: isActive('/chat') ? '#5DCDA5' : 'var(--text-muted)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            الرفيق
+          </span>
+        </div>
+
+        {/* Right two items */}
+        {RIGHT_ITEMS.map((item) => (
+          <NavButton
+            key={item.path}
+            {...item}
+            isActive={isActive(item.path)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
