@@ -101,13 +101,16 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') ?? '20');
     const offset = parseInt(searchParams.get('offset') ?? '0');
 
-    const entries = await db.journalEntry.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    });
+    const [entries, total] = await Promise.all([
+      db.journalEntry.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      db.journalEntry.count(),
+    ]);
 
-    return NextResponse.json({ entries });
+    return NextResponse.json({ entries, total });
   } catch (err) {
     console.error('Journal GET error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

@@ -17,14 +17,64 @@ interface Unit {
   content: string;
 }
 
+// ─── Design tokens (local, matches analysis/chat/settings) ────────────────────
+
+const CARD: React.CSSProperties = {
+  background: 'rgba(255,255,255,.03)',
+  border: '1px solid rgba(255,255,255,.07)',
+  borderRadius: 20,
+};
+
+const BOOK_COLORS: Record<string, string> = {
+  atomic_habits: '#2EBE80',
+  seven_habits: '#376EC8',
+  your_brain_on_porn: '#4A3CB4',
+};
+const DEFAULT_COLOR = '#5DCDA5';
+
+// ─── Loading dots ─────────────────────────────────────────────────────────────
+
+function LoadingDots() {
+  return (
+    <div style={{ display: 'flex', gap: 5, justifyContent: 'center', padding: '40px 0' }}>
+      {[0, 0.15, 0.3].map((d, i) => (
+        <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#5DCDA5', animation: `blink 1.2s ease-in-out ${d}s infinite` }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Back button ──────────────────────────────────────────────────────────────
+
+function BackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#9CA6BD',
+      }}
+    >
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
 // ─── Unit Accordion ───────────────────────────────────────────────────────────
 
 function UnitRow({
   unit,
+  color,
   initialOpen = false,
   shouldScroll = false,
 }: {
   unit: Unit;
+  color: string;
   initialOpen?: boolean;
   shouldScroll?: boolean;
 }) {
@@ -48,15 +98,15 @@ function UnitRow({
         key={pi}
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 13,
-          color: 'var(--text-secondary)',
+          fontSize: 13.5,
+          color: '#B6BFCF',
           lineHeight: 1.85,
           margin: 0,
           marginBottom: pi < text.split('\n\n').length - 1 ? 10 : 0,
         }}
         dangerouslySetInnerHTML={{
           __html: para
-            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary);font-weight:600">$1</strong>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#EAF2EE;font-weight:600">$1</strong>')
             .replace(/\n/g, '<br/>'),
         }}
       />
@@ -67,11 +117,12 @@ function UnitRow({
     <div
       ref={rowRef}
       style={{
-        border: shouldScroll ? '1px solid var(--gold-primary)' : '1px solid var(--border-soft)',
-        borderRadius: 'var(--radius-small)',
+        border: shouldScroll ? `1px solid ${color}80` : '1px solid rgba(255,255,255,.07)',
+        borderRadius: 16,
         overflow: 'hidden',
-        background: open ? 'var(--bg-elevated)' : 'var(--bg-card)',
-        transition: 'background 0.2s ease, border-color 0.3s ease',
+        background: open ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.025)',
+        boxShadow: shouldScroll ? `0 0 24px ${color}25` : 'none',
+        transition: 'background 0.3s ease, border-color 0.4s ease',
       }}
     >
       {/* عنوان الوحدة — قابل للنقر */}
@@ -85,40 +136,31 @@ function UnitRow({
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
+          gap: 13,
           textAlign: 'right',
+          minHeight: 44,
         }}
       >
         <span
           style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 13,
-            color: 'var(--gold-primary)',
-            fontWeight: 700,
-            width: 28,
-            flexShrink: 0,
-            textAlign: 'center',
+            width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+            background: `${color}1F`,
+            color,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 700,
           }}
         >
           {unit.unitNumber === 99 ? '✦' : unit.unitNumber}
         </span>
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: 'var(--border-mid)',
-            flexShrink: 0,
-          }}
-        />
         <span
           style={{
             flex: 1,
             fontFamily: 'var(--font-body)',
             fontSize: 14,
-            color: 'var(--text-primary)',
+            color: '#EAF2EE',
             fontWeight: open ? 600 : 400,
             textAlign: 'right',
-            transition: 'font-weight 0.15s',
+            transition: 'font-weight 0.2s',
           }}
         >
           {unit.unitTitle}
@@ -126,10 +168,10 @@ function UnitRow({
         <span
           style={{
             fontSize: 11,
-            color: 'var(--text-muted)',
+            color: '#6B7A8C',
             flexShrink: 0,
             display: 'inline-block',
-            transition: 'transform 0.2s ease',
+            transition: 'transform 0.3s ease',
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         >
@@ -139,12 +181,7 @@ function UnitRow({
 
       {/* المحتوى الكامل */}
       {open && (
-        <div
-          style={{
-            padding: '0 16px 16px',
-            borderTop: '1px solid var(--border-soft)',
-          }}
-        >
+        <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,.06)' }}>
           <div style={{ paddingTop: 14 }}>
             {renderContent(unit.content)}
           </div>
@@ -156,14 +193,8 @@ function UnitRow({
 
 // ─── Book Card ────────────────────────────────────────────────────────────────
 
-const BOOK_COLORS: Record<string, string> = {
-  atomic_habits:     'var(--gold-primary)',
-  seven_habits:      'var(--accent-emerald)',
-  your_brain_on_porn: 'var(--accent-purple)',
-};
-
 function BookCard({ book, onSelect }: { book: Book; onSelect: () => void }) {
-  const color = BOOK_COLORS[book.bookSlug] ?? 'var(--gold-primary)';
+  const color = BOOK_COLORS[book.bookSlug] ?? DEFAULT_COLOR;
   // اسم عربي قصير: ما قبل القوس الأول
   const shortTitle = book.bookTitle.split('(')[0].trim();
 
@@ -172,63 +203,69 @@ function BookCard({ book, onSelect }: { book: Book; onSelect: () => void }) {
       onClick={onSelect}
       style={{
         width: '100%',
-        padding: '18px 20px',
-        background: 'var(--bg-card)',
-        border: `1px solid ${color}30`,
-        borderRadius: 'var(--radius-card)',
+        padding: '18px 18px',
+        ...CARD,
+        borderColor: `${color}30`,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: 16,
         textAlign: 'right',
-        transition: 'border-color 0.2s, background 0.2s',
+        transition: 'border-color 0.3s ease, background 0.3s ease',
+        minHeight: 44,
       }}
     >
-      {/* شريط اللون */}
-      <div
+      <span
         style={{
-          width: 4,
-          height: 52,
-          borderRadius: 4,
-          background: color,
-          flexShrink: 0,
+          width: 46, height: 46, borderRadius: 14, flexShrink: 0,
+          background: `linear-gradient(140deg, ${color}2A, ${color}10)`,
+          border: `1px solid ${color}40`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color,
         }}
-      />
-      <div style={{ flex: 1, textAlign: 'right' }}>
+      >
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d="M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5A1.5 1.5 0 014 18.5v-13z" strokeLinejoin="round" />
+          <path d="M20 5.5C20 4.7 19.3 4 18.5 4H12v16h6.5a1.5 1.5 0 001.5-1.5v-13z" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
         <div
           style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 16,
-            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 15.5,
+            color: '#EAF2EE',
             fontWeight: 700,
-            marginBottom: 5,
+            marginBottom: 4,
             lineHeight: 1.4,
           }}
         >
           {shortTitle}
         </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 12,
-            color: 'var(--text-muted)',
-          }}
-        >
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#8A93A6' }}>
           {book.unitCount} وحدة
         </div>
       </div>
-      <svg
-        width="16"
-        height="16"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="2"
-        stroke="var(--text-muted)"
-        style={{ flexShrink: 0, transform: 'scaleX(-1)' }}
-      >
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="#808AA0" style={{ flexShrink: 0, transform: 'scaleX(-1)' }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
       </svg>
     </button>
+  );
+}
+
+// ─── Error state ──────────────────────────────────────────────────────────────
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div
+      style={{
+        textAlign: 'center', padding: '28px 22px',
+        color: '#D85A30', fontFamily: 'var(--font-body)', fontSize: 13,
+        background: 'rgba(216,90,48,.06)', border: '1px solid rgba(216,90,48,.2)', borderRadius: 20,
+      }}
+    >
+      {message}
+    </div>
   );
 }
 
@@ -298,105 +335,30 @@ function LibraryContent() {
     setUnitsError('');
   };
 
-  const color = selectedBook
-    ? (BOOK_COLORS[selectedBook.bookSlug] ?? 'var(--gold-primary)')
-    : 'var(--gold-primary)';
+  const color = selectedBook ? (BOOK_COLORS[selectedBook.bookSlug] ?? DEFAULT_COLOR) : DEFAULT_COLOR;
 
   return (
-    <div
-      style={{
-        maxWidth: 420,
-        margin: '0 auto',
-        minHeight: 'calc(100vh - 110px)',
-        padding: '24px 20px 100px',
-      }}
-    >
+    <div style={{ padding: '20px 20px 8px', direction: 'rtl' }}>
+
       {/* ─── هيدر ──────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          marginBottom: 24,
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         {selectedBook ? (
-          <button
-            onClick={backToBooks}
-            style={{
-              background: 'var(--gold-faint)',
-              border: '1px solid var(--border-mid)',
-              borderRadius: 'var(--radius-button)',
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-body)',
-              fontSize: 13,
-              cursor: 'pointer',
-              padding: '7px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              flexShrink: 0,
-            }}
-          >
-            ← رجوع
-          </button>
+          <BackButton onClick={backToBooks} label="رجوع لقائمة الكتب" />
         ) : (
-          <button
-            onClick={() => router.push('/')}
-            style={{
-              background: 'var(--gold-faint)',
-              border: '1px solid var(--border-mid)',
-              borderRadius: 'var(--radius-button)',
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-body)',
-              fontSize: 13,
-              cursor: 'pointer',
-              padding: '7px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              flexShrink: 0,
-            }}
-          >
-            ← الرئيسية
-          </button>
+          <BackButton onClick={() => router.push('/')} label="الرئيسية" />
         )}
 
-        <div>
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 22,
-              color: 'var(--text-primary)',
-              fontWeight: 700,
-              margin: 0,
-              lineHeight: 1.3,
-            }}
-          >
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 19, color: '#EAF2EE', lineHeight: 1.35 }}>
             {selectedBook ? selectedBook.bookTitle.split('(')[0].trim() : 'المكتبة'}
           </h1>
           {!selectedBook && (
-            <p
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 13,
-                color: 'var(--text-muted)',
-                margin: '3px 0 0',
-              }}
-            >
+            <p style={{ margin: '3px 0 0', fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 13, color: '#9CA6BD' }}>
               المعرفة العلمية من الكتب الثلاثة
             </p>
           )}
           {selectedBook && (
-            <p
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 12,
-                color: color,
-                margin: '3px 0 0',
-                opacity: 0.8,
-              }}
-            >
+            <p style={{ margin: '3px 0 0', fontFamily: 'var(--font-body)', fontSize: 12, color, opacity: 0.85 }}>
               {units.length > 0 ? `${units.length} وحدة` : ''}
             </p>
           )}
@@ -406,46 +368,12 @@ function LibraryContent() {
       {/* ─── قائمة الكتب ───────────────────────────────────────────────────── */}
       {!selectedBook && (
         <>
-          {booksLoading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 40,
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 14,
-              }}
-            >
-              <div style={{ marginBottom: 8, fontSize: 24 }}>📚</div>
-              جارٍ التحميل...
-            </div>
-          )}
-
-          {booksError && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 32,
-                color: 'var(--alert-warm)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 13,
-                background: 'rgba(216,90,48,0.06)',
-                border: '1px solid rgba(216,90,48,0.2)',
-                borderRadius: 'var(--radius-card)',
-              }}
-            >
-              {booksError}
-            </div>
-          )}
-
+          {booksLoading && <LoadingDots />}
+          {booksError && <ErrorState message={booksError} />}
           {!booksLoading && !booksError && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               {books.map((book) => (
-                <BookCard
-                  key={book.bookSlug}
-                  book={book}
-                  onSelect={() => openBook(book)}
-                />
+                <BookCard key={book.bookSlug} book={book} onSelect={() => openBook(book)} />
               ))}
             </div>
           )}
@@ -456,56 +384,20 @@ function LibraryContent() {
       {selectedBook && (
         <>
           {/* شريط ملوّن */}
-          <div
-            style={{
-              height: 3,
-              borderRadius: 2,
-              background: color,
-              marginBottom: 20,
-              opacity: 0.6,
-            }}
-          />
+          <div style={{ height: 3, borderRadius: 2, background: color, marginBottom: 20, opacity: 0.55 }} />
 
-          {unitsLoading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 40,
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 14,
-              }}
-            >
-              <div style={{ marginBottom: 8, fontSize: 22 }}>⏳</div>
-              جارٍ تحميل الوحدات...
-            </div>
-          )}
-
-          {unitsError && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 32,
-                color: 'var(--alert-warm)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 13,
-                background: 'rgba(216,90,48,0.06)',
-                border: '1px solid rgba(216,90,48,0.2)',
-                borderRadius: 'var(--radius-card)',
-              }}
-            >
-              {unitsError}
-            </div>
-          )}
+          {unitsLoading && <LoadingDots />}
+          {unitsError && <ErrorState message={unitsError} />}
 
           {!unitsLoading && units.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 12 }}>
               {units.map((unit) => {
                 const isTarget = unitParam !== null && unit.unitNumber === unitParam;
                 return (
                   <UnitRow
                     key={unit.unitNumber}
                     unit={unit}
+                    color={color}
                     initialOpen={isTarget}
                     shouldScroll={isTarget}
                   />
@@ -523,20 +415,7 @@ function LibraryContent() {
 
 export default function LibraryPage() {
   return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            padding: 40,
-            textAlign: 'center',
-            color: 'var(--text-muted)',
-            fontFamily: 'var(--font-body)',
-          }}
-        >
-          جاري التحميل...
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingDots />}>
       <LibraryContent />
     </Suspense>
   );
