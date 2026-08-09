@@ -21,6 +21,35 @@ function formatArabicDate(dateStr: string) {
   }));
 }
 
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="رجوع"
+      style={{
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#9CA6BD', marginBottom: 20,
+      }}
+    >
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
+function LoadingDots() {
+  return (
+    <div style={{ display: 'flex', gap: 5, justifyContent: 'center', padding: '60px 0' }}>
+      {[0, 0.15, 0.3].map((d, i) => (
+        <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#5DCDA5', animation: `blink 1.2s ease-in-out ${d}s infinite` }} />
+      ))}
+    </div>
+  );
+}
+
 export default function JournalEntryPage() {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,130 +66,89 @@ export default function JournalEntryPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginTop: 60 }}>
-        ...
+      <div style={{ padding: '20px 20px 8px', direction: 'rtl' }}>
+        <BackButton onClick={() => router.back()} />
+        <LoadingDots />
       </div>
     );
   }
 
   if (!entry) {
     return (
-      <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginTop: 60 }}>
-        لم تُوجد المذكرة
+      <div style={{ padding: '20px 20px 8px', direction: 'rtl' }}>
+        <BackButton onClick={() => router.back()} />
+        <div style={{ textAlign: 'center', color: '#6B7A8C', fontFamily: 'var(--font-body)', fontSize: 14, marginTop: 40 }}>
+          لم تُوجد المذكرة
+        </div>
       </div>
     );
   }
 
+  const isVoice = entry.type === 'voice';
+
   return (
-    <div style={{ padding: '20px', maxWidth: 600, margin: '0 auto' }}>
-      <button
-        onClick={() => router.back()}
+    <div style={{ padding: '20px 20px 8px', direction: 'rtl' }}>
+      <BackButton onClick={() => router.back()} />
+
+      <div
         style={{
-          background: 'var(--gold-faint)',
-          border: '1px solid var(--border-mid)',
-          borderRadius: '50%',
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-secondary)',
-          cursor: 'pointer',
-          fontSize: 16,
-          marginBottom: 20,
-          transition: 'all 0.3s ease',
+          background: 'rgba(255,255,255,.03)',
+          border: '1px solid rgba(255,255,255,.07)',
+          borderRadius: 22,
+          padding: '22px 20px',
         }}
       >
-        ←
-      </button>
-
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-soft)',
-        borderRadius: 'var(--radius-card)',
-        padding: '24px 22px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-      }}>
         {/* رأس المذكرة */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <div
+          <span
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: 'var(--gold-faint)',
-              border: '1px solid var(--border-mid)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+              background: isVoice ? 'rgba(93,205,165,.14)' : 'rgba(74,60,180,.14)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: isVoice ? '#5DCDA5' : '#8B7EE8',
             }}
           >
-            {entry.type === 'voice' ? (
-              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="var(--gold-primary)">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+            {isVoice ? (
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+                <rect x="9" y="3" width="6" height="12" rx="3" />
+                <path d="M6 11a6 6 0 0012 0M12 17v4" strokeLinecap="round" />
               </svg>
             ) : (
-              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="var(--gold-primary)">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+                <path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
-          </div>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 12,
-            color: 'var(--text-muted)',
-          }}>
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#8A93A6' }}>
             {formatArabicDate(entry.createdAt)}
           </span>
         </div>
 
         {/* المحتوى */}
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 15,
-          color: 'var(--text-primary)',
-          lineHeight: 1.9,
-          margin: 0,
-          whiteSpace: 'pre-wrap',
-        }}>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 15, color: '#EAF2EE',
+            lineHeight: 1.9, margin: 0, whiteSpace: 'pre-wrap',
+          }}
+        >
           {entry.content}
         </p>
 
         {/* المزاج والطاقة */}
         {(entry.mood !== null || entry.energy !== null) && (
-          <div style={{
-            marginTop: 20,
-            paddingTop: 14,
-            borderTop: '1px solid var(--border-soft)',
-            display: 'flex',
-            gap: 12,
-          }}>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', gap: 10 }}>
             {entry.mood !== null && (
-              <div
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--gold-faint)',
-                  border: '1px solid var(--border-mid)',
-                  borderRadius: 'var(--radius-button)',
-                }}
-              >
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>المزاج</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--gold-primary)', fontWeight: 700 }}>
+              <div style={{ padding: '10px 18px', background: 'rgba(93,205,165,.08)', border: '1px solid rgba(93,205,165,.22)', borderRadius: 16 }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#8A93A6', marginBottom: 3 }}>المزاج</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 20, color: '#5DCDA5', fontWeight: 700 }}>
                   {toEnglishNumerals(entry.mood)}/10
                 </div>
               </div>
             )}
             {entry.energy !== null && (
-              <div
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--gold-faint)',
-                  border: '1px solid var(--border-mid)',
-                  borderRadius: 'var(--radius-button)',
-                }}
-              >
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>الطاقة</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--gold-primary)', fontWeight: 700 }}>
+              <div style={{ padding: '10px 18px', background: 'rgba(55,110,200,.08)', border: '1px solid rgba(55,110,200,.22)', borderRadius: 16 }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#8A93A6', marginBottom: 3 }}>الطاقة</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 20, color: '#6E9BE8', fontWeight: 700 }}>
                   {toEnglishNumerals(entry.energy)}/10
                 </div>
               </div>
@@ -169,12 +157,7 @@ export default function JournalEntryPage() {
         )}
 
         {/* عدد الكلمات */}
-        <div style={{
-          marginTop: 14,
-          fontFamily: 'var(--font-display)',
-          fontSize: 11,
-          color: 'var(--text-muted)',
-        }}>
+        <div style={{ marginTop: 16, fontFamily: 'var(--font-body)', fontSize: 11.5, color: '#6B7A8C' }}>
           {toEnglishNumerals(entry.wordCount)} كلمة
         </div>
       </div>

@@ -20,6 +20,69 @@ function formatArabicDate(dateStr: string) {
   }));
 }
 
+const CARD: React.CSSProperties = {
+  background: 'rgba(255,255,255,.03)',
+  border: '1px solid rgba(255,255,255,.07)',
+  borderRadius: 20,
+};
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="رجوع"
+      style={{
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#9CA6BD',
+      }}
+    >
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
+function EntryTypeIcon({ isVoice }: { isVoice: boolean }) {
+  return (
+    <span
+      style={{
+        width: 34, height: 34, borderRadius: 11, flexShrink: 0,
+        background: isVoice ? 'rgba(93,205,165,.14)' : 'rgba(74,60,180,.14)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: isVoice ? '#5DCDA5' : '#8B7EE8',
+      }}
+    >
+      {isVoice ? (
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+          <rect x="9" y="3" width="6" height="12" rx="3" />
+          <path d="M6 11a6 6 0 0012 0M12 17v4" strokeLinecap="round" />
+        </svg>
+      ) : (
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+          <path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+function StatPill({ label, value }: { label: string; value: number }) {
+  return (
+    <span
+      style={{
+        fontFamily: 'var(--font-body)', fontSize: 11, color: '#8FD8C0',
+        padding: '3px 11px', background: 'rgba(93,205,165,.08)',
+        border: '1px solid rgba(93,205,165,.2)', borderRadius: 20,
+      }}
+    >
+      {label} {toEnglishNumerals(value)}/10
+    </span>
+  );
+}
+
 export default function JournalPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,56 +114,20 @@ export default function JournalPage() {
   );
 
   return (
-    <div style={{ padding: '20px', maxWidth: 600, margin: '0 auto' }}>
+    <div style={{ padding: '20px 20px 8px', direction: 'rtl' }}>
       {/* الهيدر */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            background: 'var(--gold-faint)',
-            border: '1px solid var(--border-mid)',
-            borderRadius: '50%',
-            width: 36,
-            height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontSize: 16,
-            flexShrink: 0,
-            transition: 'all 0.3s ease',
-          }}
-        >
-          ←
-        </button>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 24,
-          color: 'var(--text-primary)',
-          fontWeight: 700,
-          margin: 0,
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+        <BackButton onClick={() => router.back()} />
+        <h1 style={{ margin: 0, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 19, color: '#EAF2EE' }}>
           مذكراتي
         </h1>
       </div>
 
-      {/* شريط البحث — pill shape */}
-      <div style={{ position: 'relative', marginBottom: 16 }}>
+      {/* شريط البحث */}
+      <div style={{ position: 'relative', marginBottom: 18 }}>
         <svg
-          width="16"
-          height="16"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="2"
-          stroke="var(--text-muted)"
-          style={{
-            position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-          }}
+          width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="#6B7A8C"
+          style={{ position: 'absolute', right: 15, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
@@ -110,22 +137,16 @@ export default function JournalPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="ابحث في مذكراتك..."
           style={{
-            width: '100%',
+            width: '100%', boxSizing: 'border-box',
             padding: '12px 44px 12px 18px',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border-soft)',
-            borderRadius: 'var(--radius-button)',
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            outline: 'none',
-            boxSizing: 'border-box',
-            transition: 'border-color 0.3s ease',
+            background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)',
+            borderRadius: 50, color: '#EAF2EE',
+            fontFamily: 'var(--font-body)', fontSize: 13.5, outline: 'none',
           }}
         />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {filtered.map((entry) => (
           <div
             key={entry.id}
@@ -133,88 +154,27 @@ export default function JournalPage() {
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/journal/${entry.id}`); }}
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-soft)',
-              borderRadius: 20,
-              padding: '16px 18px',
-              cursor: 'pointer',
-              transition: 'border-color 0.3s ease',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            }}
+            style={{ ...CARD, padding: '16px 17px', cursor: 'pointer', transition: 'border-color 0.3s ease' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  background: 'var(--gold-faint)',
-                  border: '1px solid var(--border-mid)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {entry.type === 'voice' ? (
-                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="var(--gold-primary)">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                  </svg>
-                ) : (
-                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="var(--gold-primary)">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                  </svg>
-                )}
-              </div>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 11,
-                color: 'var(--text-muted)',
-              }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 11 }}>
+              <EntryTypeIcon isVoice={entry.type === 'voice'} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6B7A8C' }}>
                 {formatArabicDate(entry.createdAt)}
               </span>
             </div>
-            <p style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 14,
-              color: 'var(--text-secondary)',
-              lineHeight: 1.7,
-              margin: 0,
-              overflow: 'hidden',
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-            }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, color: '#B6BFCF',
+                lineHeight: 1.75, margin: 0,
+                overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+              }}
+            >
               {entry.content}
             </p>
             {(entry.mood !== null || entry.energy !== null) && (
-              <div style={{ marginTop: 10, display: 'flex', gap: 12 }}>
-                {entry.mood !== null && (
-                  <span style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 11,
-                    color: 'var(--text-muted)',
-                    padding: '3px 10px',
-                    background: 'var(--gold-faint)',
-                    borderRadius: 'var(--radius-button)',
-                    border: '1px solid var(--border-soft)',
-                  }}>
-                    مزاج {entry.mood}/10
-                  </span>
-                )}
-                {entry.energy !== null && (
-                  <span style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 11,
-                    color: 'var(--text-muted)',
-                    padding: '3px 10px',
-                    background: 'var(--gold-faint)',
-                    borderRadius: 'var(--radius-button)',
-                    border: '1px solid var(--border-soft)',
-                  }}>
-                    طاقة {entry.energy}/10
-                  </span>
-                )}
+              <div style={{ marginTop: 11, display: 'flex', gap: 8 }}>
+                {entry.mood !== null && <StatPill label="مزاج" value={entry.mood} />}
+                {entry.energy !== null && <StatPill label="طاقة" value={entry.energy} />}
               </div>
             )}
           </div>
@@ -222,33 +182,27 @@ export default function JournalPage() {
       </div>
 
       {!loading && filtered.length === 0 && (
-        <p style={{
-          textAlign: 'center',
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-body)',
-          marginTop: 40,
-          fontSize: 14,
-        }}>
-          لا توجد مذكرات بعد
-        </p>
+        <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '34px 22px' }}>
+          <span style={{ width: 50, height: 50, borderRadius: 15, background: 'rgba(93,205,165,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5', marginBottom: 14 }}>
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" strokeWidth="1.6" stroke="currentColor">
+              <path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, color: '#B6BFCF', lineHeight: 1.8 }}>
+            {search ? 'لا نتائج مطابقة' : 'لا توجد مذكرات بعد'}
+          </div>
+        </div>
       )}
 
-      {hasMore && !search && (
+      {hasMore && !search && filtered.length > 0 && (
         <button
           onClick={() => fetchEntries()}
           disabled={loading}
           style={{
-            width: '100%',
-            marginTop: 16,
-            padding: '12px',
-            background: 'transparent',
-            border: '1px solid var(--border-mid)',
-            borderRadius: 'var(--radius-button)',
-            color: 'var(--gold-primary)',
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            width: '100%', marginTop: 14, minHeight: 44,
+            padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 50, color: '#5DCDA5',
+            fontFamily: 'var(--font-body)', fontSize: 13, cursor: 'pointer', transition: 'all 0.3s ease',
           }}
         >
           {loading ? '...' : 'تحميل المزيد'}
