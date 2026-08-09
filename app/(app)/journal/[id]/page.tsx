@@ -15,10 +15,10 @@ interface Entry {
 }
 
 function formatArabicDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('ar-SA', {
+  return toEnglishNumerals(new Date(dateStr).toLocaleDateString('ar-SA', {
     year: 'numeric', month: 'long', day: 'numeric',
     weekday: 'long', hour: '2-digit', minute: '2-digit',
-  });
+  }));
 }
 
 export default function JournalEntryPage() {

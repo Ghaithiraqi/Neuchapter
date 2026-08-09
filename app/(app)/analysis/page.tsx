@@ -250,8 +250,8 @@ function UrgeLogSection({ logs, total, filter, loading, onFilterChange }: {
   const formatTime = (iso: string) => {
     const d = new Date(iso);
     return {
-      date: d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' }),
-      time: d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      date: toEnglishNumerals(d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' })),
+      time: toEnglishNumerals(d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', hour12: true })),
     };
   };
 
@@ -489,7 +489,7 @@ export default function AnalysisPage() {
         </h1>
         <p style={{ margin: 0, fontWeight: 300, fontSize: 13.5, color: '#9CA6BD' }}>
           {data?.weekStart
-            ? `${new Date(data.weekStart).toLocaleDateString('ar-IQ')} — ${new Date(data.weekEnd).toLocaleDateString('ar-IQ')}`
+            ? `${toEnglishNumerals(new Date(data.weekStart).toLocaleDateString('ar-IQ'))} — ${toEnglishNumerals(new Date(data.weekEnd).toLocaleDateString('ar-IQ'))}`
             : '7 أيام · من لحظاتك ومذكراتك المسجّلة'}
         </p>
       </div>

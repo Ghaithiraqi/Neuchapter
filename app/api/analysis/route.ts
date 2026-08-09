@@ -3,7 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
 import { ANALYSIS_SYSTEM_PROMPT } from '@/lib/prompts/analysis';
-import { calculateCost } from '@/lib/utils';
+import { calculateCost, toEnglishNumerals } from '@/lib/utils';
+
+interface RawPattern {
+  id?: number; type?: string; tag?: string; confidence?: number;
+  title?: string; explanation?: string; recommendation?: string;
+}
+
+/** يضمن أن كل نص يأتي من كلود يستخدم أرقاماً إنجليزية، بصرف النظر عمّا يولّده النموذج. */
+function normalizePattern(p: RawPattern) {
+  return {
+    ...p,
+    tag: typeof p.tag === 'string' ? toEnglishNumerals(p.tag) : p.tag,
+    title: typeof p.title === 'string' ? toEnglishNumerals(p.title) : p.title,
+    explanation: typeof p.explanation === 'string' ? toEnglishNumerals(p.explanation) : p.explanation,
+    recommendation: typeof p.recommendation === 'string' ? toEnglishNumerals(p.recommendation) : p.recommendation,
+  };
+}
 
 export const maxDuration = 30;
 
@@ -258,7 +274,7 @@ export async function POST(req: NextRequest) {
         {
           id: 1,
           type: 'success',
-          tag: 'بداية · ٠١',
+          tag: 'بداية · 01',
           confidence: 100,
           title: 'أنت بدأت الرحلة',
           explanation:
@@ -325,8 +341,8 @@ ${urgeLines}`;
       const rawText = response.content[0].type === 'text' ? response.content[0].text : '{}';
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);
       const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
-      patterns = parsed.patterns ?? [];
-      summary = parsed.summary ?? '';
+      patterns = ((parsed.patterns ?? []) as RawPattern[]).map(normalizePattern);
+      summary = toEnglishNumerals(parsed.summary ?? '');
 
       await db.usageLog.create({
         data: {

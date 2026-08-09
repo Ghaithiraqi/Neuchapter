@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toEnglishNumerals } from '@/lib/utils';
 
 const MODE_LABELS: Record<string, string> = {
   support: '🌧️ وضع صعب',
@@ -32,8 +33,8 @@ function formatDate(dateStr: string) {
 
   if (diffDays === 0) return 'اليوم';
   if (diffDays === 1) return 'أمس';
-  if (diffDays < 7) return `قبل ${diffDays} أيام`;
-  return d.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
+  if (diffDays < 7) return `قبل ${toEnglishNumerals(diffDays)} أيام`;
+  return toEnglishNumerals(d.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }));
 }
 
 export default function HistoryPage() {

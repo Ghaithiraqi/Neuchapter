@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toEnglishNumerals } from '@/lib/utils';
 
 interface Entry {
   id: number;
@@ -14,9 +15,9 @@ interface Entry {
 }
 
 function formatArabicDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('ar-SA', {
+  return toEnglishNumerals(new Date(dateStr).toLocaleDateString('ar-SA', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
-  });
+  }));
 }
 
 export default function JournalPage() {

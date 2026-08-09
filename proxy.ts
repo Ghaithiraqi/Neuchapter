@@ -19,6 +19,11 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // يستثني: ملفات _next الثابتة، الصور، favicon، صفحة الدخول، مسارات المصادقة، وapi/health
-  matcher: ['/((?!_next/static|_next/image|favicon|unlock|api/auth|api/health).*)'],
+  // يستثني: ملفات _next الثابتة، الصور، favicon، manifest، sw، الأيقونات،
+  // صفحة الدخول، مسارات المصادقة، وapi/health.
+  // manifest.json مهم بالذات: متصفحات لا تُرسل الكوكيز مع طلب <link rel="manifest">
+  // الأول، فيُعاد توجيهه لـ/unlock ويفشل تحليله كـJSON إن بقي محميًا.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon|manifest\\.json|sw\\.js|icons/|unlock|api/auth|api/health).*)',
+  ],
 };

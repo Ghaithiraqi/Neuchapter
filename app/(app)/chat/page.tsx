@@ -874,7 +874,7 @@ function ChatContent() {
 
   const isStreaming = loading && streamingText.length > 0;
   const hour = new Date().getHours();
-  const today = new Date().toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = toEnglishNumerals(new Date().toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>

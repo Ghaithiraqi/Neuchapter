@@ -16,11 +16,11 @@ interface Entry {
 }
 
 function formatDay(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('ar-SA', {
+  return toEnglishNumerals(new Date(dateStr).toLocaleDateString('ar-SA', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
-  });
+  }));
 }
 
 // ─── Live recording timer ─────────────────────────────────────────────────────
