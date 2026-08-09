@@ -27,11 +27,15 @@ export function ClientLayoutShell({ children }: { children: React.ReactNode }) {
         style={{
           position: 'relative',
           zIndex: 1,
+          // minHeight ensures short pages still keep content above the fixed
+          // bottom bar even when there is nothing to scroll.
+          minHeight: '100vh',
           // When nav is hidden, just respect safe-area; otherwise track the
           // real bottom-bar height measured by BottomNav's ResizeObserver.
+          // +60px = 40px gradient scrim + 20px breathing room.
           paddingBottom: navless
             ? 'env(safe-area-inset-bottom, 0px)'
-            : 'calc(var(--bottom-bar-height, 140px) + 20px)',
+            : 'calc(var(--bottom-bar-height, 160px) + 60px)',
         }}
       >
         {children}

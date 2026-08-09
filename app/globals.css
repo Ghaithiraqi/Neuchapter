@@ -289,6 +289,18 @@ button, [role="button"], nav, label {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* ─── Analysis screen animations ────────────────────────────────────────── */
+
+@keyframes ncSkel {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.9;  }
+}
+
+@keyframes ncRise {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
