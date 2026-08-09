@@ -12,7 +12,7 @@ const CHAT_MODES = [
     id: 'support',
     name: 'وضع صعب',
     icon: '🌧️',
-    color: 'var(--accent-purple)',
+    color: '#4A3CB4',
     systemPrompt:
       'أنت مرشد داعم وحاني. المستخدم يمر بلحظة صعبة. كن قصيراً، دافئاً، تجنب الأسئلة الكثيرة. ركّز على الاحتواء والتطمين. لا تعطه نصائح إلا لو طلب.',
   },
@@ -20,7 +20,7 @@ const CHAT_MODES = [
     id: 'reflect',
     name: 'أحتاج أفكر',
     icon: '🤔',
-    color: 'var(--accent-emerald)',
+    color: '#376EC8',
     systemPrompt:
       'أنت معالج CBT. ساعد المستخدم يفكك أفكاره بأسئلة سقراطية عميقة. اسأل سؤال واحد قوي في كل رد. ركّز على: ما الفكرة؟ ما الدليل؟ ما البديل؟',
   },
@@ -28,7 +28,7 @@ const CHAT_MODES = [
     id: 'motivate',
     name: 'أحتاج تحفيز',
     icon: '💪',
-    color: 'var(--gold-primary)',
+    color: '#5DCDA5',
     systemPrompt:
       'أنت كوتش قوي ومباشر. المستخدم يحتاج طاقة وحماس. كن واضحاً، مباشراً، استخدم لغة قوية لكن إيجابية. ذكّره بإنجازاته وقدراته.',
   },
@@ -36,7 +36,7 @@ const CHAT_MODES = [
     id: 'analyze',
     name: 'حلل لحظة',
     icon: '📝',
-    color: 'var(--accent-blue)',
+    color: '#259696',
     systemPrompt:
       'أنت محلل سلوكي. المستخدم يريد تفكيك تجربة معينة. اسأل عن: السياق، المحفز، الأفكار، المشاعر، السلوك، النتيجة. ساعده يرى الأنماط.',
   },
@@ -44,7 +44,7 @@ const CHAT_MODES = [
     id: 'morning',
     name: 'بداية يوم',
     icon: '🌅',
-    color: '#FF8040',
+    color: '#2EBE80',
     systemPrompt:
       'أنت مرشد صباحي. ساعد المستخدم يحدد نية واضحة لليوم. اسأل: كيف نمت؟ ما هدفك اليوم؟ ما التحدي المتوقع؟ كيف ستتعامل معه؟',
   },
@@ -91,6 +91,23 @@ interface Message {
   sources?: MessageSource[];
 }
 
+// ─── Bubble treatments ──────────────────────────────────────────────────────────
+
+const BUBBLE_USER: React.CSSProperties = {
+  background: 'linear-gradient(140deg, rgba(55,110,200,.9), rgba(74,60,180,.85))',
+  border: 'none',
+  color: '#EAF2EE',
+  borderRadius: '22px 22px 6px 22px',
+  boxShadow: '0 6px 18px rgba(55,110,200,.2)',
+};
+
+const BUBBLE_ASSISTANT: React.CSSProperties = {
+  background: 'rgba(255,255,255,.045)',
+  border: '1px solid rgba(255,255,255,.08)',
+  color: '#D8E1EC',
+  borderRadius: '22px 22px 22px 6px',
+};
+
 // ─── Breathing Modal ──────────────────────────────────────────────────────────
 
 function BreathingModal({ onClose }: { onClose: () => void }) {
@@ -117,40 +134,47 @@ function BreathingModal({ onClose }: { onClose: () => void }) {
   }, []);
 
   const phaseText = { in: 'شهيق', hold: 'احتفظ', out: 'زفير' };
-  const phaseColor = { in: 'var(--accent-emerald)', hold: 'var(--gold-primary)', out: 'var(--accent-purple)' };
+  const phaseColor = { in: '#5DCDA5', hold: '#259696', out: '#4A3CB4' };
   const phaseScale = { in: 1.3, hold: 1.3, out: 0.85 };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,26,26,0.92)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'radial-gradient(700px 500px at 50% 40%, #16203A 0%, rgba(10,13,24,.97) 65%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 26,
+        padding: '32px 24px', animation: 'ncScreenIn .4s cubic-bezier(.4,0,.2,1)',
+      }}
+    >
+      <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 17, color: '#EAF2EE' }}>
         التنفس العميق — الجولة {toEnglishNumerals(round)}
       </div>
       <div
         style={{
-          width: 160,
-          height: 160,
-          borderRadius: '50%',
+          width: 160, height: 160, borderRadius: '50%',
           background: `${phaseColor[phase]}20`,
-          border: `3px solid ${phaseColor[phase]}`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
+          border: `2px solid ${phaseColor[phase]}`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           transform: `scale(${phaseScale[phase]})`,
           transition: 'transform 1s ease, border-color 1s',
-          boxShadow: `0 0 40px ${phaseColor[phase]}30`,
+          boxShadow: `0 0 44px ${phaseColor[phase]}30`,
         }}
       >
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: phaseColor[phase] }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 30, color: phaseColor[phase] }}>
           {toEnglishNumerals(count)}
         </div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: phaseColor[phase] }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: phaseColor[phase], marginTop: 2 }}>
           {phaseText[phase]}
         </div>
       </div>
       <button
         onClick={onClose}
-        style={{ marginTop: 16, padding: '12px 32px', background: 'var(--gold-faint)', border: '1px solid var(--border-mid)', borderRadius: 50, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer' }}
+        style={{
+          marginTop: 14, padding: '12px 32px', minHeight: 44,
+          background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+          borderRadius: 50, color: '#B6BFCF',
+          fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer',
+        }}
       >
         إنهاء
       </button>
@@ -174,26 +198,43 @@ function MeditationModal({ onClose }: { onClose: () => void }) {
   const s = seconds % 60;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,26,26,0.92)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, padding: 32 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)', textAlign: 'center' }}>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'radial-gradient(700px 500px at 50% 40%, #16203A 0%, rgba(10,13,24,.97) 65%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24,
+        padding: 32, animation: 'ncScreenIn .4s cubic-bezier(.4,0,.2,1)',
+      }}
+    >
+      <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 17, color: '#EAF2EE', textAlign: 'center' }}>
         تأمل هادئ 🧘
       </div>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.8, maxWidth: 280 }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 14, color: '#B6BFCF', textAlign: 'center', lineHeight: 1.85, maxWidth: 280, margin: 0 }}>
         أغمض عينيك، ركّز على أنفاسك. دع الأفكار تمر دون أن تتعلق بها.
       </p>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 52, color: seconds > 0 ? 'var(--gold-primary)' : 'var(--accent-emerald)', fontWeight: 700 }}>
+      <div style={{ fontFamily: 'var(--font-body)', fontSize: 52, color: seconds > 0 ? '#5DCDA5' : '#2EBE80', fontWeight: 700 }}>
         {seconds > 0 ? `${toEnglishNumerals(m)}:${s.toString().padStart(2, '0')}` : 'انتهى ✓'}
       </div>
       <div style={{ display: 'flex', gap: 10 }}>
         <button
           onClick={() => setRunning((r) => !r)}
-          style={{ padding: '12px 24px', background: 'var(--gold-faint)', border: '1px solid var(--border-mid)', borderRadius: 50, color: 'var(--gold-primary)', fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer' }}
+          style={{
+            padding: '12px 24px', minHeight: 44,
+            background: 'rgba(93,205,165,.1)', border: '1px solid rgba(93,205,165,.35)',
+            borderRadius: 50, color: '#5DCDA5',
+            fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer',
+          }}
         >
           {running ? 'إيقاف مؤقت' : 'استمرار'}
         </button>
         <button
           onClick={onClose}
-          style={{ padding: '12px 24px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: 50, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer' }}
+          style={{
+            padding: '12px 24px', minHeight: 44,
+            background: 'transparent', border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 50, color: '#909BB2',
+            fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer',
+          }}
         >
           إغلاق
         </button>
@@ -214,10 +255,10 @@ function SourceChip({ source }: { source: MessageSource }) {
   return (
     <div
       style={{
-        border: '1px solid var(--border-soft)',
-        borderRadius: 8,
+        border: '1px solid rgba(37,150,150,.24)',
+        borderRadius: 11,
         overflow: 'hidden',
-        background: 'var(--gold-faint)',
+        background: 'rgba(37,150,150,.08)',
         maxWidth: 320,
       }}
     >
@@ -229,20 +270,24 @@ function SourceChip({ source }: { source: MessageSource }) {
           alignItems: 'center',
           gap: 6,
           width: '100%',
-          padding: '5px 10px',
+          padding: '6px 11px',
           background: 'transparent',
           border: 'none',
           cursor: 'pointer',
           textAlign: 'right',
+          minHeight: 32,
         }}
       >
-        <span style={{ fontSize: 12, flexShrink: 0 }}>📖</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3FB6B6" strokeWidth="1.8" style={{ flexShrink: 0 }}>
+          <path d="M12 3c-4.5 0-8 3.1-8 7 0 2.1 1 4 2.7 5.2L6 20l4.2-2.1c.6.1 1.2.1 1.8.1 4.5 0 8-3.1 8-7s-3.5-7-8-7z" strokeLinejoin="round" />
+        </svg>
         <span
           style={{
             flex: 1,
             fontFamily: 'var(--font-body)',
-            fontSize: 11,
-            color: 'var(--gold-primary)',
+            fontSize: 11.5,
+            fontWeight: 500,
+            color: '#3FB6B6',
             lineHeight: 1.4,
             textAlign: 'right',
             overflow: 'hidden',
@@ -255,7 +300,7 @@ function SourceChip({ source }: { source: MessageSource }) {
         <span
           style={{
             fontSize: 9,
-            color: 'var(--text-muted)',
+            color: '#6B7A8C',
             flexShrink: 0,
             transition: 'transform 0.2s',
             transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -270,17 +315,17 @@ function SourceChip({ source }: { source: MessageSource }) {
       {expanded && (
         <div
           style={{
-            padding: '0 10px 8px',
-            borderTop: '1px solid var(--border-soft)',
+            padding: '0 11px 10px',
+            borderTop: '1px solid rgba(37,150,150,.18)',
           }}
         >
           <p
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: 12,
-              color: 'var(--text-secondary)',
+              color: '#B6BFCF',
               lineHeight: 1.7,
-              margin: '8px 0 6px',
+              margin: '9px 0 6px',
             }}
           >
             {source.snippet}
@@ -298,11 +343,11 @@ function SourceChip({ source }: { source: MessageSource }) {
               padding: 0,
               fontFamily: 'var(--font-body)',
               fontSize: 11,
-              color: 'var(--gold-primary)',
+              color: '#3FB6B6',
               cursor: 'pointer',
               textDecoration: 'underline',
               textUnderlineOffset: 2,
-              opacity: 0.85,
+              opacity: 0.9,
             }}
           >
             عرض الكامل ↗
@@ -320,14 +365,170 @@ function SourceChips({ sources }: { sources?: MessageSource[] }) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
-        marginTop: 4,
+        gap: 5,
+        marginTop: 6,
         paddingRight: 4,
       }}
     >
       {sources.map((s) => (
         <SourceChip key={s.id} source={s} />
       ))}
+    </div>
+  );
+}
+
+// ─── Human-support / crisis banner — calm, never alarming ─────────────────────
+
+function CrisisBanner({
+  level, reason, onBreathe, onSupport, onDismiss,
+}: {
+  level: 'medium' | 'high';
+  reason: string;
+  onBreathe: () => void;
+  onSupport: () => void;
+  onDismiss: () => void;
+}) {
+  const title = level === 'high' ? 'أنا معك في هذه اللحظة' : 'لاحظت شيئًا يستحق الانتباه';
+  return (
+    <div
+      style={{
+        margin: '10px 20px 0',
+        padding: '14px 16px',
+        background: 'rgba(93,205,165,.07)',
+        border: '1px solid rgba(93,205,165,.28)',
+        borderRadius: 18,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
+        <span
+          style={{
+            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+            background: 'rgba(93,205,165,.14)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5-2.5 4.5-9.5 9-9.5 9z" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: '#DCEAE3', fontWeight: 700, marginBottom: 4 }}>
+            {title}
+          </div>
+          {reason && (
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#B6BFCF', lineHeight: 1.7 }}>
+              {reason}
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+        <button
+          onClick={onBreathe}
+          style={{
+            padding: '7px 14px', minHeight: 36,
+            background: 'rgba(93,205,165,.12)', border: '1px solid rgba(93,205,165,.3)',
+            borderRadius: 20, color: '#5DCDA5',
+            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          🌬️ تمرين تنفّس
+        </button>
+        <button
+          onClick={onSupport}
+          style={{
+            padding: '7px 14px', minHeight: 36,
+            background: 'rgba(55,110,200,.1)', border: '1px solid rgba(55,110,200,.28)',
+            borderRadius: 20, color: '#6E9BE8',
+            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          دعم بشري فوري
+        </button>
+        <button
+          onClick={onDismiss}
+          style={{
+            padding: '7px 14px', minHeight: 36,
+            background: 'transparent', border: '1px solid rgba(255,255,255,.09)',
+            borderRadius: 20, color: '#6B7A8C',
+            fontFamily: 'var(--font-body)', fontSize: 12, cursor: 'pointer',
+          }}
+        >
+          إغلاق
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Check-in banner ────────────────────────────────────────────────────────────
+
+function CheckinBanner({ hour, onStart, onDismiss }: { hour: number; onStart: () => void; onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        margin: '10px 20px 0',
+        padding: '14px 16px',
+        background: 'rgba(46,190,128,.06)',
+        border: '1px solid rgba(46,190,128,.2)',
+        borderRadius: 18,
+      }}
+    >
+      <div style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: '#5DCDA5', fontWeight: 700, marginBottom: 10 }}>
+        {hour < 12 ? '🌅 كيف تريد أن تبدأ يومك؟' : '🌙 كيف كان يومك؟'}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={onStart}
+          style={{
+            padding: '8px 16px', minHeight: 38,
+            background: 'linear-gradient(135deg,#2EBE80,#259696)', border: 'none',
+            borderRadius: 20, color: '#0D1220',
+            fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          ابدأ {hour < 12 ? 'check-in الصباحي' : 'check-in المسائي'}
+        </button>
+        <button
+          onClick={onDismiss}
+          style={{
+            padding: '8px 16px', minHeight: 38,
+            background: 'transparent', border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 20, color: '#909BB2',
+            fontFamily: 'var(--font-body)', fontSize: 12.5, cursor: 'pointer',
+          }}
+        >
+          لاحقًا
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Typing indicator ───────────────────────────────────────────────────────────
+
+function TypingDots() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <div
+        style={{
+          display: 'flex', gap: 5, alignItems: 'center',
+          padding: '16px 18px',
+          background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)',
+          borderRadius: '22px 22px 22px 6px',
+        }}
+      >
+        {[0, 0.2, 0.4].map((delay, i) => (
+          <span
+            key={i}
+            style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: '#5DCDA5',
+              animation: `ncBreathe 1.2s ease-in-out ${delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -358,6 +559,7 @@ function ChatContent() {
   const [playingTts, setPlayingTts] = useState<number | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
 
   const [recordSeconds, setRecordSeconds] = useState(0);
 
@@ -369,7 +571,7 @@ function ChatContent() {
   });
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrl = useRef<string | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -379,8 +581,7 @@ function ChatContent() {
   // ─── Scroll to bottom ────────────────────────────────────────────────────
   const scrollBottom = useCallback(() => {
     requestAnimationFrame(() => {
-      const el = containerRef.current;
-      if (el) el.scrollTop = el.scrollHeight;
+      messagesEndRef.current?.scrollIntoView({ block: 'end' });
     });
   }, []);
 
@@ -673,39 +874,77 @@ function ChatContent() {
 
   const isStreaming = loading && streamingText.length > 0;
   const hour = new Date().getHours();
+  const today = new Date().toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'calc(100vh - 110px)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+      {/* ─── Sticky header ───────────────────────────────────────────────── */}
       <div
         style={{
-          padding: '12px 20px 8px',
-          borderBottom: '1px solid var(--border-soft)',
-          flexShrink: 0,
+          position: 'sticky',
+          top: 0,
+          zIndex: 6,
+          background: 'rgba(17,22,38,.94)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(255,255,255,.06)',
+          padding: '14px 20px 8px',
         }}
       >
-        {/* Top row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--text-primary)', fontWeight: 700 }}>
-            {currentMode.icon} {currentMode.name}
+        {/* Top row — identity + actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            {/* Companion avatar */}
+            <div style={{ position: 'relative', width: 36, height: 36, flexShrink: 0 }}>
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute', inset: -3, borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(46,190,128,.32), transparent 70%)',
+                }}
+              />
+              <div
+                style={{
+                  position: 'relative', width: 36, height: 36, borderRadius: '50%',
+                  background: `linear-gradient(140deg, ${currentMode.color}, #259696 60%, #376EC8)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16,
+                }}
+              >
+                {currentMode.icon}
+              </div>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15.5, color: '#EAF2EE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {currentMode.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-body)', fontSize: 11.5, color: '#5DCDA5' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5DCDA5', boxShadow: '0 0 7px rgba(93,205,165,.7)' }} />
+                هنا معك دائمًا
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <button
               onClick={() => router.push('/chat/history')}
-              style={{ padding: '6px 12px', background: 'var(--gold-faint)', border: '1px solid var(--border-soft)', borderRadius: 20, color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer' }}
+              style={{
+                padding: '6px 12px', minHeight: 32,
+                background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)',
+                borderRadius: 20, color: '#A8B8C4',
+                fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer',
+              }}
             >
               📚 محادثاتي
             </button>
             <button
               onClick={newChat}
-              style={{ padding: '6px 12px', background: 'var(--gold-faint)', border: '1px solid var(--border-mid)', borderRadius: 20, color: 'var(--gold-primary)', fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer' }}
+              style={{
+                padding: '6px 12px', minHeight: 32,
+                background: 'rgba(46,190,128,.1)', border: '1px solid rgba(46,190,128,.28)',
+                borderRadius: 20, color: '#5DCDA5',
+                fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              }}
             >
               ＋ جديدة
             </button>
@@ -713,7 +952,7 @@ function ChatContent() {
         </div>
 
         {/* Mode pills — horizontal scroll */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {CHAT_MODES.map((m) => {
             const active = m.id === modeId;
             return (
@@ -722,15 +961,15 @@ function ChatContent() {
                 onClick={() => setModeId(m.id)}
                 style={{
                   flexShrink: 0,
-                  padding: '5px 12px',
-                  background: active ? `${m.color}25` : 'transparent',
-                  border: `1px solid ${active ? m.color : 'var(--border-soft)'}`,
+                  padding: '6px 13px', minHeight: 30,
+                  background: active ? `${m.color}22` : 'rgba(255,255,255,.03)',
+                  border: `1px solid ${active ? m.color : 'rgba(255,255,255,.08)'}`,
                   borderRadius: 50,
-                  color: active ? m.color : 'var(--text-muted)',
+                  color: active ? '#EAF2EE' : '#8A93A6',
                   fontFamily: 'var(--font-body)',
                   fontSize: 12,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.3s ease',
                   whiteSpace: 'nowrap',
                   fontWeight: active ? 700 : 400,
                 }}
@@ -742,77 +981,37 @@ function ChatContent() {
         </div>
       </div>
 
-      {/* ─── Crisis Banner ────────────────────────────────────────────────── */}
+      {/* ─── Crisis banner — calm, never alarming ───────────────────────── */}
       {crisisLevel && crisisLevel !== 'low' && (
-        <div
-          style={{
-            padding: '12px 20px',
-            background: crisisLevel === 'high' ? 'rgba(216,90,48,0.12)' : 'rgba(232,184,114,0.08)',
-            borderBottom: `1px solid ${crisisLevel === 'high' ? 'rgba(216,90,48,0.3)' : 'var(--border-mid)'}`,
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: crisisLevel === 'high' ? 'var(--alert-warm)' : 'var(--gold-primary)', fontWeight: 700, marginBottom: 6 }}>
-            {crisisLevel === 'high' ? '🚨 أنت في لحظة صعبة جداً' : '⚠️ لاحظت شيئاً صعباً'}
-          </div>
-          {crisisReason && (
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
-              {crisisReason}
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => setShowBreathing(true)} style={{ padding: '5px 12px', background: 'var(--gold-faint)', border: '1px solid var(--border-mid)', borderRadius: 20, color: 'var(--gold-primary)', fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer' }}>
-              🌬️ تنفس
-            </button>
-            <button onClick={() => router.push('/sos')} style={{ padding: '5px 12px', background: 'rgba(216,90,48,0.1)', border: '1px solid rgba(216,90,48,0.3)', borderRadius: 20, color: 'var(--alert-warm)', fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer' }}>
-              🆘 بروتوكول الطوارئ
-            </button>
-            <button onClick={() => setCrisisLevel(null)} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: 20, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer' }}>
-              إغلاق
-            </button>
-          </div>
-        </div>
+        <CrisisBanner
+          level={crisisLevel}
+          reason={crisisReason}
+          onBreathe={() => setShowBreathing(true)}
+          onSupport={() => router.push('/sos')}
+          onDismiss={() => setCrisisLevel(null)}
+        />
       )}
 
-      {/* ─── Check-in Banner ──────────────────────────────────────────────── */}
+      {/* ─── Check-in banner ─────────────────────────────────────────────── */}
       {showCheckin && (
-        <div
-          style={{
-            padding: '12px 20px',
-            background: 'var(--gold-faint)',
-            borderBottom: '1px solid var(--border-mid)',
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gold-primary)', fontWeight: 600, marginBottom: 8 }}>
-            {hour < 12 ? '🌅 كلود يريد سؤالك عن يومك' : '🌙 كيف كان يومك؟'}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => startCheckin(hour < 12 ? 'morning' : 'evening')} style={{ padding: '6px 14px', background: 'var(--gold-primary)', border: 'none', borderRadius: 20, color: 'var(--bg-deep)', fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              ابدأ {hour < 12 ? 'check-in الصباحي' : 'check-in المسائي'}
-            </button>
-            <button onClick={() => { setShowCheckin(false); localStorage.setItem('jaddidni_checkin', new Date().toISOString().split('T')[0]); }} style={{ padding: '6px 14px', background: 'transparent', border: '1px solid var(--border-mid)', borderRadius: 20, color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 12, cursor: 'pointer' }}>
-              لاحقاً
-            </button>
-          </div>
-        </div>
+        <CheckinBanner
+          hour={hour}
+          onStart={() => startCheckin(hour < 12 ? 'morning' : 'evening')}
+          onDismiss={() => { setShowCheckin(false); localStorage.setItem('jaddidni_checkin', new Date().toISOString().split('T')[0]); }}
+        />
       )}
 
       {/* ─── Messages ─────────────────────────────────────────────────────── */}
-      <div
-        ref={containerRef}
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '16px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
+      <div style={{ padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {restoring && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-body)' }}>
+          <div style={{ textAlign: 'center', color: '#6B7A8C', fontSize: 12, fontFamily: 'var(--font-body)' }}>
             جاري استرجاع المحادثة...
+          </div>
+        )}
+
+        {!restoring && !sessionId && (
+          <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#6B7A8C', marginBottom: 2 }}>
+            {today}
           </div>
         )}
 
@@ -821,17 +1020,13 @@ function ChatContent() {
             <div
               style={{
                 maxWidth: '85%',
-                padding: '11px 14px',
-                borderRadius: 16,
-                fontSize: 14,
-                lineHeight: 1.8,
-                background: msg.role === 'assistant' ? 'var(--bg-elevated)' : `${currentMode.color}18`,
-                border: msg.role === 'assistant' ? '1px solid var(--border-soft)' : `1px solid ${currentMode.color}35`,
-                color: 'var(--text-primary)',
+                padding: '13px 16px',
+                fontSize: 15,
+                lineHeight: 1.85,
                 fontFamily: 'var(--font-body)',
-                borderTopRightRadius: msg.role === 'assistant' ? 4 : 16,
-                borderTopLeftRadius: msg.role === 'user' ? 4 : 16,
+                fontWeight: 400,
                 position: 'relative',
+                ...(msg.role === 'assistant' ? BUBBLE_ASSISTANT : BUBBLE_USER),
               }}
             >
               {msg.content}
@@ -844,16 +1039,16 @@ function ChatContent() {
 
             {/* Action buttons for assistant messages */}
             {msg.role === 'assistant' && (
-              <div style={{ display: 'flex', gap: 6, marginTop: 4, paddingRight: 4 }}>
+              <div style={{ display: 'flex', gap: 6, marginTop: 5, paddingRight: 4, alignItems: 'center' }}>
                 {/* TTS button */}
                 <button
                   onClick={() => playTts(msg.content, i)}
                   disabled={ttsLoading === i}
                   style={{
-                    padding: '3px 8px',
+                    padding: '3px 6px',
                     background: 'transparent',
                     border: 'none',
-                    color: playingTts === i ? 'var(--gold-primary)' : 'var(--text-muted)',
+                    color: playingTts === i ? '#5DCDA5' : '#6B7A8C',
                     fontFamily: 'var(--font-body)',
                     fontSize: 14,
                     cursor: ttsLoading === i ? 'wait' : 'pointer',
@@ -868,10 +1063,10 @@ function ChatContent() {
                 <button
                   onClick={() => msg.savedId ? unsaveMessage(msg, i) : saveMessage(msg, i)}
                   style={{
-                    padding: '3px 8px',
+                    padding: '3px 6px',
                     background: 'transparent',
                     border: 'none',
-                    color: msg.savedId ? 'var(--gold-primary)' : 'var(--text-muted)',
+                    color: msg.savedId ? '#5DCDA5' : '#6B7A8C',
                     fontFamily: 'var(--font-body)',
                     fontSize: 14,
                     cursor: 'pointer',
@@ -883,14 +1078,14 @@ function ChatContent() {
                 </button>
 
                 {msg.time && (
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', alignSelf: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C' }}>
                     {msg.time}
                   </span>
                 )}
               </div>
             )}
             {msg.role === 'user' && msg.time && (
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginTop: 3, paddingLeft: 4 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C', marginTop: 4, paddingLeft: 4 }}>
                 {msg.time}
               </div>
             )}
@@ -899,20 +1094,16 @@ function ChatContent() {
 
         {/* Streaming indicator */}
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            {streamingText ? (
+          streamingText ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <div
                 style={{
                   maxWidth: '85%',
-                  padding: '11px 14px',
-                  borderRadius: 16,
-                  borderTopRightRadius: 4,
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-soft)',
-                  color: 'var(--text-primary)',
+                  padding: '13px 16px',
+                  fontSize: 15,
+                  lineHeight: 1.85,
                   fontFamily: 'var(--font-body)',
+                  ...BUBBLE_ASSISTANT,
                 }}
               >
                 {streamingText}
@@ -921,42 +1112,42 @@ function ChatContent() {
                     display: 'inline-block',
                     width: 2,
                     height: 14,
-                    background: 'var(--gold-primary)',
+                    background: '#5DCDA5',
                     marginRight: 2,
                     verticalAlign: 'middle',
                     animation: 'blink 1s ease-in-out infinite',
                   }}
                 />
               </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 4, padding: '8px 14px' }}>
-                {[0, 0.2, 0.4].map((delay, i) => (
-                  <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold-primary)', animation: `blink 1.5s ease-in-out ${delay}s infinite` }} />
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <TypingDots />
+          )
         )}
+
+        <div ref={messagesEndRef} />
       </div>
 
       {/* ─── Suggestions ─────────────────────────────────────────────────── */}
       {suggestions.length > 0 && !loading && (
-        <div style={{ padding: '0 20px 6px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0 }}>
+        <div style={{ padding: '0 20px 10px', display: 'flex', gap: 6, overflowX: 'auto' }}>
           {suggestions.map((s, i) => (
             <button
               key={i}
               onClick={() => { setSuggestions([]); sendMessage(s); }}
               style={{
                 flexShrink: 0,
-                padding: '6px 14px',
-                background: 'var(--gold-faint)',
-                border: '1px solid var(--border-mid)',
-                borderRadius: 50,
-                color: 'var(--text-secondary)',
+                padding: '9px 15px', minHeight: 40,
+                background: 'rgba(255,255,255,.04)',
+                border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 18,
+                color: '#D2DAE6',
                 fontFamily: 'var(--font-body)',
-                fontSize: 12,
+                fontSize: 13,
+                fontWeight: 500,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                transition: 'all 0.3s ease',
               }}
             >
               {s}
@@ -965,13 +1156,13 @@ function ChatContent() {
         </div>
       )}
 
-      {/* ─── Input Area ───────────────────────────────────────────────────── */}
+      {/* ─── Sticky input area ───────────────────────────────────────────── */}
       <div
         style={{
-          padding: '10px 20px 12px',
-          borderTop: '1px solid var(--border-soft)',
-          flexShrink: 0,
-          position: 'relative',
+          position: 'sticky',
+          bottom: 'calc(var(--bottom-bar-height, 160px) + 14px)',
+          zIndex: 6,
+          padding: '8px 20px 0',
         }}
       >
         {/* Slash command dropdown */}
@@ -982,12 +1173,12 @@ function ChatContent() {
               bottom: '100%',
               right: 20,
               left: 20,
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-mid)',
-              borderRadius: 12,
+              marginBottom: 6,
+              background: '#1A2036',
+              border: '1px solid rgba(255,255,255,.1)',
+              borderRadius: 16,
               overflow: 'hidden',
-              boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
-              zIndex: 50,
+              boxShadow: '0 -8px 28px rgba(0,0,0,0.35)',
             }}
           >
             {filteredCmds.map((c) => (
@@ -996,10 +1187,10 @@ function ChatContent() {
                 onClick={() => execSlash(c.cmd)}
                 style={{
                   width: '100%',
-                  padding: '10px 16px',
+                  padding: '11px 16px',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: '1px solid var(--border-soft)',
+                  borderBottom: '1px solid rgba(255,255,255,.06)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -1007,10 +1198,10 @@ function ChatContent() {
                   textAlign: 'right',
                 }}
               >
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gold-primary)', fontWeight: 700 }}>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#5DCDA5', fontWeight: 700 }}>
                   {c.cmd}
                 </span>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#6B7A8C' }}>
                   {c.desc}
                 </span>
               </button>
@@ -1018,24 +1209,38 @@ function ChatContent() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+        {/* Composed pill bar — textarea + mic + send */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 6,
+            background: 'rgba(255,255,255,.045)',
+            border: `1px solid ${inputFocused ? 'rgba(93,205,165,.4)' : 'rgba(255,255,255,.09)'}`,
+            borderRadius: 24,
+            padding: '6px 6px 6px 16px',
+            boxShadow: '0 10px 30px rgba(0,0,0,.25)',
+            transition: 'border-color 0.3s ease',
+          }}
+        >
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => handleInput(e.target.value)}
             onKeyDown={onKeyDown}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             placeholder={loading ? '' : 'اكتب أو اكتب / للأوامر...'}
             rows={1}
             disabled={isStreaming}
             style={{
               flex: 1,
-              padding: '11px 14px',
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-soft)',
-              borderRadius: 'var(--radius-input)',
-              color: 'var(--text-primary)',
+              padding: '9px 0',
+              background: 'transparent',
+              border: 'none',
+              color: '#EAF2EE',
               fontFamily: 'var(--font-body)',
-              fontSize: 14,
+              fontSize: 15,
               outline: 'none',
               resize: 'none',
               overflowY: 'auto',
@@ -1054,9 +1259,9 @@ function ChatContent() {
                 bottom: '100%',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                marginBottom: 4,
+                marginBottom: 6,
                 fontSize: 10,
-                color: '#ef4444',
+                color: '#5DCDA5',
                 fontFamily: 'var(--font-body)',
                 whiteSpace: 'nowrap',
                 fontWeight: 600,
@@ -1070,15 +1275,15 @@ function ChatContent() {
                 bottom: '100%',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                marginBottom: 4,
+                marginBottom: 6,
                 fontSize: 10,
-                color: 'var(--text-muted)',
+                color: '#909BB2',
                 fontFamily: 'var(--font-body)',
                 whiteSpace: 'nowrap',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-soft)',
-                borderRadius: 6,
-                padding: '3px 6px',
+                background: '#1A2036',
+                border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 8,
+                padding: '4px 8px',
                 maxWidth: 160,
                 textAlign: 'center',
               }}>
@@ -1093,25 +1298,25 @@ function ChatContent() {
                 width: 38,
                 height: 38,
                 borderRadius: '50%',
-                background: isRecording ? '#ef4444' : 'var(--gold-faint)',
-                border: `1px solid ${isRecording ? '#ef4444' : 'var(--border-mid)'}`,
+                background: isRecording ? 'linear-gradient(140deg, rgba(93,205,165,.28), rgba(37,150,150,.28))' : 'rgba(255,255,255,.05)',
+                border: `1px solid ${isRecording ? '#5DCDA5' : 'rgba(255,255,255,.1)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: isStreaming ? 'not-allowed' : 'pointer',
                 flexShrink: 0,
                 opacity: isStreaming ? 0.5 : 1,
-                transition: 'all 0.2s',
-                animation: isRecording ? 'micPulse 1.5s ease-in-out infinite' : 'none',
+                transition: 'all 0.3s ease',
+                animation: isRecording ? 'ncMicPulse 2.2s ease-out infinite' : 'none',
               }}
             >
               {isProcessing ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" style={{ animation: 'spin 1s linear infinite' }}>
-                  <circle cx="12" cy="12" r="9" stroke="var(--text-muted)" strokeWidth="2.5" strokeOpacity="0.25" />
-                  <path d="M21 12a9 9 0 00-9-9" stroke="var(--text-secondary)" strokeWidth="2.5" />
+                  <circle cx="12" cy="12" r="9" stroke="#6B7A8C" strokeWidth="2.5" strokeOpacity="0.25" />
+                  <path d="M21 12a9 9 0 00-9-9" stroke="#A8B8C4" strokeWidth="2.5" />
                 </svg>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isRecording ? '#fff' : 'var(--text-secondary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isRecording ? '#5DCDA5' : '#A8B8C4'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="9" y="2" width="6" height="12" rx="3" />
                   <path d="M5 10a7 7 0 0014 0" />
                   <line x1="12" y1="19" x2="12" y2="22" />
@@ -1129,19 +1334,19 @@ function ChatContent() {
               width: 42,
               height: 42,
               borderRadius: '50%',
-              background: loading || !input.trim() ? 'var(--gold-faint)' : 'var(--gold-primary)',
+              background: loading || !input.trim() ? 'rgba(255,255,255,.06)' : 'linear-gradient(140deg,#2EBE80,#259696)',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
               flexShrink: 0,
-              opacity: loading || !input.trim() ? 0.5 : 1,
-              transition: 'all 0.2s',
+              boxShadow: loading || !input.trim() ? 'none' : '0 6px 18px rgba(46,190,128,.28)',
+              transition: 'all 0.3s ease',
             }}
           >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke={loading || !input.trim() ? 'var(--text-muted)' : 'var(--bg-deep)'}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loading || !input.trim() ? '#6B7A8C' : '#EAF2EE'} strokeWidth="1.7" style={{ transform: 'scaleX(-1)' }}>
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
           </button>
         </div>
@@ -1158,7 +1363,7 @@ function ChatContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>جاري التحميل...</div>}>
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#6B7A8C', fontFamily: 'var(--font-body)' }}>جاري التحميل...</div>}>
       <ChatContent />
     </Suspense>
   );
