@@ -64,7 +64,7 @@ function ResetModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: 
   return (
     <div
       style={{
-        position: 'fixed', inset: 0,
+        position: 'fixed', inset: 0, /* modal-ok: true overlay, not the page shell */
         background: 'rgba(10,26,26,0.85)',
         zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -96,7 +96,7 @@ function ResetModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: 
             color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 24,
           }}
         >
-          سيُحفظ الـ streak الحالي كسجل في التاريخ ويبدأ عداد جديد من اليوم.
+          سيُحفظ حضورك الحالي كسجل في التاريخ ويبدأ عداد جديد من اليوم.
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
@@ -142,7 +142,7 @@ function DatePickerModal({
   return (
     <div
       style={{
-        position: 'fixed', inset: 0,
+        position: 'fixed', inset: 0, /* modal-ok: true overlay, not the page shell */
         background: 'rgba(10,26,26,0.85)',
         zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -230,7 +230,7 @@ function MilestonePopup({
   return (
     <div
       style={{
-        position: 'fixed', inset: 0,
+        position: 'fixed', inset: 0, /* modal-ok: true overlay, not the page shell */
         background: 'rgba(10,26,26,0.9)',
         zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',

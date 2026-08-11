@@ -89,6 +89,29 @@ interface Message {
   time: string;
   savedId?: number; // DB id إذا تم الحفظ
   sources?: MessageSource[];
+  mode?: ModeId; // الوضع الفعّال وقت الإرسال — غير متوفر للرسائل المُستعادة من الأرشيف
+}
+
+// ─── Memory chips (من ذاكرتي) ──────────────────────────────────────────────
+
+interface ProfileSummary {
+  triggers?: string[];
+  copingWorks?: string[];
+  goals?: string[];
+}
+
+function buildMemoryChips(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as ProfileSummary;
+    const chips: string[] = [];
+    if (parsed.copingWorks?.[0]) chips.push(parsed.copingWorks[0]);
+    if (parsed.triggers?.[0]) chips.push(`محفّزك الأكبر: ${parsed.triggers[0]}`);
+    if (parsed.goals?.[0]) chips.push(`هدفك: ${parsed.goals[0]}`);
+    return chips;
+  } catch {
+    return [];
+  }
 }
 
 // ─── Bubble treatments ──────────────────────────────────────────────────────────
@@ -140,7 +163,7 @@ function BreathingModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 200,
+        position: 'fixed', inset: 0, zIndex: 200, /* modal-ok: true overlay, not the page shell */
         background: 'radial-gradient(700px 500px at 50% 40%, #16203A 0%, rgba(10,13,24,.97) 65%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 26,
         padding: '32px 24px', animation: 'ncScreenIn .4s cubic-bezier(.4,0,.2,1)',
@@ -200,7 +223,7 @@ function MeditationModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 200,
+        position: 'fixed', inset: 0, zIndex: 200, /* modal-ok: true overlay, not the page shell */
         background: 'radial-gradient(700px 500px at 50% 40%, #16203A 0%, rgba(10,13,24,.97) 65%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24,
         padding: 32, animation: 'ncScreenIn .4s cubic-bezier(.4,0,.2,1)',
@@ -490,7 +513,7 @@ function CheckinBanner({ hour, onStart, onDismiss }: { hour: number; onStart: ()
             fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          ابدأ {hour < 12 ? 'check-in الصباحي' : 'check-in المسائي'}
+          ابدأ {hour < 12 ? 'تسجيل الصباح' : 'تسجيل المساء'}
         </button>
         <button
           onClick={onDismiss}
@@ -563,6 +586,8 @@ function ChatContent() {
   const [showCheckin, setShowCheckin] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
+  const [modesOpen, setModesOpen] = useState(false);
+  const [memoryChips, setMemoryChips] = useState<string[]>([]);
 
   const [recordSeconds, setRecordSeconds] = useState(0);
 
@@ -586,6 +611,16 @@ function ChatContent() {
     requestAnimationFrame(() => {
       messagesEndRef.current?.scrollIntoView({ block: 'end' });
     });
+  }, []);
+
+  // ─── Memory chips (من ذاكرتي) ────────────────────────────────────────────
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((d: { settings?: { profileSummary?: string | null } }) => {
+        setMemoryChips(buildMemoryChips(d.settings?.profileSummary));
+      })
+      .catch(() => {});
   }, []);
 
   // ─── Restore session ─────────────────────────────────────────────────────
@@ -730,7 +765,7 @@ function ChatContent() {
               setStreamingText(accumulated);
             } else if (obj.type === 'done') {
               const replyTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-              setMessages((prev) => [...prev, { role: 'assistant', content: accumulated, time: replyTime, sources: obj.sources ?? [] }]);
+              setMessages((prev) => [...prev, { role: 'assistant', content: accumulated, time: replyTime, sources: obj.sources ?? [], mode: modeId }]);
               setStreamingText('');
               if (obj.sessionId) setSessionId(obj.sessionId);
               if (obj.suggestions?.length) setSuggestions(obj.suggestions);
@@ -812,8 +847,13 @@ function ChatContent() {
   const handleInput = (val: string) => {
     setInput(val);
     if (val.startsWith('/')) {
+      // Filter on the command word only (up to the first space) — commands like
+      // /سجل take trailing note text as an argument, and matching the filter
+      // against the whole remainder would empty filteredCmds as soon as that
+      // argument text is typed, hiding the dropdown before it can be selected.
+      const commandWord = val.split(/\s/, 1)[0];
       setSlashOpen(true);
-      setSlashFilter(val.slice(1).toLowerCase());
+      setSlashFilter(commandWord.slice(1).toLowerCase());
     } else {
       setSlashOpen(false);
     }
@@ -823,6 +863,27 @@ function ChatContent() {
 
   const execSlash = (cmd: string) => {
     setSlashOpen(false);
+
+    if (cmd === '/سجل') {
+      // بقية النص بعد الأمر تُحفظ كمذكرة
+      const text = input.slice(cmd.length).trim();
+      setInput('');
+      if (!text) return;
+      fetch('/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: text, type: 'text' }),
+      })
+        .then((r) => {
+          const feedback = r.ok ? 'سجّلت ذلك في مذكرتك ✓' : 'تعذّر حفظ المذكرة، حاول من صفحة "سجّل لحظة".';
+          setMessages((prev) => [...prev, { role: 'assistant', content: feedback, time: '' }]);
+        })
+        .catch(() => {
+          setMessages((prev) => [...prev, { role: 'assistant', content: 'تعذّر حفظ المذكرة، حاول من صفحة "سجّل لحظة".', time: '' }]);
+        });
+      return;
+    }
+
     setInput('');
 
     if (cmd === '/طوارئ') { router.push('/sos'); return; }
@@ -836,11 +897,6 @@ function ChatContent() {
         const idx = messages.lastIndexOf(lastAssistant);
         saveMessage(lastAssistant, idx);
       }
-      return;
-    }
-    if (cmd === '/سجل') {
-      // بقية النص بعد الأمر تُحفظ كمذكرة
-      setInput('');
       return;
     }
   };
@@ -898,38 +954,40 @@ function ChatContent() {
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid rgba(255,255,255,.06)',
-          padding: '14px 20px 8px',
+          padding: '14px 20px 10px',
         }}
       >
         {/* Top row — identity + actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            {/* Companion avatar */}
-            <div style={{ position: 'relative', width: 36, height: 36, flexShrink: 0 }}>
+            {/* Companion avatar — هوية ثابتة، لا تتغير بتغيّر الوضع */}
+            <div style={{ position: 'relative', width: 42, height: 42, flexShrink: 0 }}>
               <div
                 aria-hidden
                 style={{
                   position: 'absolute', inset: -3, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(46,190,128,.32), transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(46,190,128,.35), transparent 70%)',
+                  animation: 'breathe 7s ease-in-out infinite',
                 }}
               />
               <div
                 style={{
-                  position: 'relative', width: 36, height: 36, borderRadius: '50%',
-                  background: `linear-gradient(140deg, ${currentMode.color}, #259696 60%, #376EC8)`,
+                  position: 'relative', width: 42, height: 42, borderRadius: '50%',
+                  background: 'linear-gradient(140deg, #2EBE80, #259696 55%, #376EC8)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16,
+                  fontSize: 17,
+                  boxShadow: '0 6px 18px rgba(46,190,128,.25)',
                 }}
               >
                 {currentMode.icon}
               </div>
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15.5, color: '#EAF2EE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {currentMode.name}
+              <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 16, color: '#EAF2EE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                رفيقك في الرحلة
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-body)', fontSize: 11.5, color: '#5DCDA5' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5DCDA5', boxShadow: '0 0 7px rgba(93,205,165,.7)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#5DCDA5' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#5DCDA5', boxShadow: '0 0 8px rgba(93,205,165,.7)' }} />
                 هنا معك دائمًا
               </div>
             </div>
@@ -937,57 +995,110 @@ function ChatContent() {
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <button
               onClick={() => router.push('/chat/history')}
+              aria-label="محادثاتي السابقة"
+              title="محادثاتي السابقة"
               style={{
-                padding: '6px 12px', minHeight: 32,
+                width: 36, height: 36, borderRadius: 12,
                 background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)',
-                borderRadius: 20, color: '#A8B8C4',
-                fontFamily: 'var(--font-body)', fontSize: 11, cursor: 'pointer',
+                color: '#A8B8C4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
               }}
             >
-              📚 محادثاتي
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <path d="M12 6.04A9 9 0 006 3.75c-1.05 0-2.06.18-3 .5v14.25c.94-.32 1.95-.5 3-.5a9 9 0 016 2.29m0-14.25a9 9 0 016-2.29c1.05 0 2.06.18 3 .5v14.25a9 9 0 00-3-.5 9 9 0 00-6 2.29m0-14.25v14.25" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
             <button
               onClick={newChat}
+              aria-label="محادثة جديدة"
+              title="محادثة جديدة"
               style={{
-                padding: '6px 12px', minHeight: 32,
+                width: 36, height: 36, borderRadius: 12,
                 background: 'rgba(46,190,128,.1)', border: '1px solid rgba(46,190,128,.28)',
-                borderRadius: 20, color: '#5DCDA5',
-                fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                color: '#5DCDA5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
               }}
             >
-              ＋ جديدة
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* Mode pills — horizontal scroll */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-          {CHAT_MODES.map((m) => {
-            const active = m.id === modeId;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setModeId(m.id)}
+        {/* Mode control — مضغوط افتراضيًا، يفتح كل الأوضاع الستة عند الضغط */}
+        <div style={{ marginTop: 10 }}>
+          <button
+            onClick={() => setModesOpen((o) => !o)}
+            aria-expanded={modesOpen}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '6px 12px', minHeight: 30,
+              background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+              borderRadius: 50, color: '#B6BFCF',
+              fontFamily: 'var(--font-body)', fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            <span>{currentMode.icon}</span>
+            <span>{currentMode.name}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: modesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}>
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {modesOpen && (
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 8 }}>
+              {CHAT_MODES.map((m) => {
+                const active = m.id === modeId;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => { setModeId(m.id); setModesOpen(false); }}
+                    style={{
+                      flexShrink: 0,
+                      padding: '6px 13px', minHeight: 30,
+                      background: active ? `${m.color}22` : 'rgba(255,255,255,.03)',
+                      border: `1px solid ${active ? m.color : 'rgba(255,255,255,.08)'}`,
+                      borderRadius: 50,
+                      color: active ? '#EAF2EE' : '#8A93A6',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      whiteSpace: 'nowrap',
+                      fontWeight: active ? 700 : 400,
+                    }}
+                  >
+                    {m.icon} {m.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Memory chips — من ذاكرتي، فقط إذا توفّر ملف شخصي فعلي */}
+        {memoryChips.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.05)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0, fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11.5, color: '#3FB6B6' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <path d="M12 3c-4.5 0-8 3.1-8 7 0 2.1 1 4 2.7 5.2L6 20l4.2-2.1c.6.1 1.2.1 1.8.1 4.5 0 8-3.1 8-7s-3.5-7-8-7z" strokeLinejoin="round" />
+                <path d="M8.5 10h7M8.5 12.5h4" strokeLinecap="round" />
+              </svg>
+              من ذاكرتي
+            </span>
+            {memoryChips.map((c, i) => (
+              <span
+                key={i}
                 style={{
-                  flexShrink: 0,
-                  padding: '6px 13px', minHeight: 30,
-                  background: active ? `${m.color}22` : 'rgba(255,255,255,.03)',
-                  border: `1px solid ${active ? m.color : 'rgba(255,255,255,.08)'}`,
-                  borderRadius: 50,
-                  color: active ? '#EAF2EE' : '#8A93A6',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  whiteSpace: 'nowrap',
-                  fontWeight: active ? 700 : 400,
+                  flexShrink: 0, padding: '6px 12px', borderRadius: 11,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+                  fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12, color: '#B6BFCF', whiteSpace: 'nowrap',
                 }}
               >
-                {m.icon} {m.name}
-              </button>
-            );
-          })}
-        </div>
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ─── Crisis banner — calm, never alarming ───────────────────────── */}
@@ -1010,8 +1121,31 @@ function ChatContent() {
         />
       )}
 
+      {/* ─── Human-support row — دائم، وليس فقط عند رصد أزمة ─────────────── */}
+      <button
+        onClick={() => router.push('/sos')}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 11,
+          margin: '10px 20px 0', padding: '12px 15px',
+          background: 'rgba(93,205,165,.06)', border: '1px solid rgba(93,205,165,.22)',
+          borderRadius: 16, cursor: 'pointer', textAlign: 'right',
+        }}
+      >
+        <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: 'rgba(93,205,165,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5-2.5 4.5-9.5 9-9.5 9z" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12.5, lineHeight: 1.6, color: '#B6BFCF', textAlign: 'right' }}>
+          تحتاج دعمًا بشريًا؟ خطوط الأزمات وأشخاص الثقة على بُعد لمسة.
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5DCDA5" strokeWidth="1.6" style={{ flexShrink: 0, transform: 'scaleX(-1)' }}>
+          <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       {/* ─── Messages ─────────────────────────────────────────────────────── */}
-      <div style={{ padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(240px, calc(100vh - 430px))', justifyContent: 'flex-end' }}>
         {restoring && (
           <div style={{ textAlign: 'center', color: '#6B7A8C', fontSize: 12, fontFamily: 'var(--font-body)' }}>
             جاري استرجاع المحادثة...
@@ -1019,7 +1153,7 @@ function ChatContent() {
         )}
 
         {!restoring && !sessionId && (
-          <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#6B7A8C', marginBottom: 2 }}>
+          <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#909BB2', marginBottom: 2 }}>
             {today}
           </div>
         )}
@@ -1038,6 +1172,13 @@ function ChatContent() {
                 ...(msg.role === 'assistant' ? BUBBLE_ASSISTANT : BUBBLE_USER),
               }}
             >
+              {/* علامة الوضع — فقط لرسائل الجلسة الحالية وعند وضع غير الافتراضي */}
+              {msg.role === 'assistant' && msg.mode && msg.mode !== 'support' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 11, letterSpacing: 0.3, color: '#5DCDA5' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+                  {CHAT_MODES.find((m) => m.id === msg.mode)?.name}
+                </div>
+              )}
               {msg.content}
             </div>
 
@@ -1226,8 +1367,8 @@ function ChatContent() {
             gap: 6,
             background: 'rgba(255,255,255,.045)',
             border: `1px solid ${inputFocused ? 'rgba(93,205,165,.4)' : 'rgba(255,255,255,.09)'}`,
-            borderRadius: 24,
-            padding: '6px 6px 6px 16px',
+            borderRadius: 26,
+            padding: '6px 6px 6px 18px',
             boxShadow: '0 10px 30px rgba(0,0,0,.25)',
             transition: 'border-color 0.3s ease',
           }}
@@ -1239,7 +1380,7 @@ function ChatContent() {
             onKeyDown={onKeyDown}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
-            placeholder={loading ? '' : 'اكتب أو اكتب / للأوامر...'}
+            placeholder={loading ? '' : 'اكتب ما يجول في خاطرك...'}
             rows={1}
             disabled={isStreaming}
             style={{
@@ -1252,7 +1393,7 @@ function ChatContent() {
               fontSize: 15,
               outline: 'none',
               resize: 'none',
-              overflowY: 'auto',
+              overflowY: 'auto', /* bounded-scroll: capped auto-resize textarea, not a page container */
               maxHeight: 120,
               lineHeight: 1.5,
               opacity: isStreaming ? 0.5 : 1,
@@ -1304,8 +1445,8 @@ function ChatContent() {
               disabled={isStreaming}
               title={isRecording ? 'إيقاف التسجيل' : isProcessing ? 'جاري التحويل...' : 'تسجيل صوتي'}
               style={{
-                width: 38,
-                height: 38,
+                width: 40,
+                height: 40,
                 borderRadius: '50%',
                 background: isRecording ? 'linear-gradient(140deg, rgba(93,205,165,.28), rgba(37,150,150,.28))' : 'rgba(255,255,255,.05)',
                 border: `1px solid ${isRecording ? '#5DCDA5' : 'rgba(255,255,255,.1)'}`,
@@ -1340,8 +1481,8 @@ function ChatContent() {
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
             style={{
-              width: 42,
-              height: 42,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
               background: loading || !input.trim() ? 'rgba(255,255,255,.06)' : 'linear-gradient(140deg,#2EBE80,#259696)',
               border: 'none',

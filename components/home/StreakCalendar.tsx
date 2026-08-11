@@ -56,11 +56,75 @@ function getDayType(year: number, month: number, day: number, streaks: StreakRec
   return 'empty';
 }
 
-interface Props {
-  streaks: StreakRecord[];
+type MintCategory = 'clean' | 'relapse' | 'future' | 'empty';
+
+/** يوم واحد بمعايير شاشة "سجلّي": الفئة والـ"هل هو اليوم" منفصلان، بخلاف gold/DayType. */
+function getMintDayInfo(
+  year: number,
+  month: number,
+  day: number,
+  streaks: StreakRecord[],
+): { category: MintCategory; isToday: boolean } {
+  const now = new Date();
+  const todayMs = utcMidnight(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const dateMs = utcMidnight(year, month, day);
+  const isToday = dateMs === todayMs;
+
+  if (dateMs > todayMs) return { category: 'future', isToday: false };
+
+  for (const s of streaks) {
+    if (s.relapseDate) {
+      const rd = new Date(s.relapseDate);
+      const rMs = utcMidnight(rd.getUTCFullYear(), rd.getUTCMonth(), rd.getUTCDate());
+      if (dateMs === rMs) return { category: 'relapse', isToday };
+    }
+  }
+
+  for (const s of streaks) {
+    const sd = new Date(s.startDate);
+    const startMs = utcMidnight(sd.getUTCFullYear(), sd.getUTCMonth(), sd.getUTCDate());
+    const endMs = s.endDate
+      ? (() => { const ed = new Date(s.endDate!); return utcMidnight(ed.getUTCFullYear(), ed.getUTCMonth(), ed.getUTCDate()); })()
+      : todayMs;
+    if (dateMs >= startMs && dateMs <= endMs) return { category: 'clean', isToday };
+  }
+
+  return { category: 'empty', isToday };
 }
 
-export function StreakCalendar({ streaks }: Props) {
+function mintCellStyle(category: MintCategory, isToday: boolean): React.CSSProperties {
+  if (category === 'clean' && isToday) {
+    return { border: '2px solid #5DCDA5', background: 'rgba(93,205,165,.08)', color: '#EAF2EE', fontWeight: 700, cursor: 'pointer' };
+  }
+  if (category === 'relapse' && isToday) {
+    return { border: '2px solid #5DCDA5', background: 'rgba(176,137,104,.18)', color: '#E8D9C8', fontWeight: 700, cursor: 'pointer' };
+  }
+  if (category === 'clean') {
+    return { border: '1px solid rgba(46,190,128,.3)', background: 'rgba(46,190,128,.15)', color: '#EAF2EE', fontWeight: 600, cursor: 'pointer' };
+  }
+  if (category === 'relapse') {
+    return { border: '1px solid rgba(176,137,104,.4)', background: 'rgba(176,137,104,.16)', color: '#E8D9C8', fontWeight: 600, cursor: 'pointer' };
+  }
+  if (category === 'future') return { color: 'rgba(107,128,128,.35)' };
+  return { color: 'var(--text-muted)', opacity: 0.3 };
+}
+
+function mintMarker(category: MintCategory, isToday: boolean): { glyph: string; color: string } {
+  if (category === 'relapse') return { glyph: '◇', color: '#D8B99C' };
+  if (category === 'clean' && isToday) return { glyph: '•', color: '#5DCDA5' };
+  if (category === 'clean') return { glyph: '✓', color: '#5DCDA5' };
+  return { glyph: '', color: 'transparent' };
+}
+
+interface Props {
+  streaks: StreakRecord[];
+  /** 'gold' (default) = المظهر الأصلي في الرئيسية. 'mint' = شاشة سجلّي: علامات شكلية + إمكانية الضغط على اليوم. */
+  variant?: 'gold' | 'mint';
+  /** يُستدعى فقط للأيام غير المستقبلية/غير الفارغة (mint فقط). */
+  onDaySelect?: (date: Date, category: 'clean' | 'relapse', isToday: boolean) => void;
+}
+
+export function StreakCalendar({ streaks, variant = 'gold', onDaySelect }: Props) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -108,28 +172,31 @@ export function StreakCalendar({ streaks }: Props) {
     empty: { color: 'var(--text-muted)', opacity: 0.3 },
   };
 
+  const isMint = variant === 'mint';
+  const navBtnColor = isMint ? '#9CA6BD' : 'var(--gold-primary)';
+  const navBtnBg = isMint ? 'rgba(255,255,255,.04)' : 'var(--gold-faint)';
+  const navBtnBorder = isMint ? '1px solid rgba(255,255,255,.08)' : '1px solid var(--border-soft)';
+
   return (
     <div
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-soft)',
-        borderRadius: 'var(--radius-card)',
-        padding: '18px 16px',
-        marginBottom: 18,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-      }}
+      style={
+        isMint
+          ? { background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 20, padding: '18px 16px', marginBottom: 18 }
+          : { background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 'var(--radius-card)', padding: '18px 16px', marginBottom: 18, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+      }
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <button
           onClick={prevMonth}
+          aria-label="الشهر السابق"
           style={{
-            background: 'var(--gold-faint)',
-            border: '1px solid var(--border-soft)',
-            borderRadius: 8,
-            color: 'var(--gold-primary)',
-            width: 32,
-            height: 32,
+            background: navBtnBg,
+            border: navBtnBorder,
+            borderRadius: isMint ? '50%' : 8,
+            color: navBtnColor,
+            width: isMint ? 36 : 32,
+            height: isMint ? 36 : 32,
             cursor: 'pointer',
             fontSize: 14,
             display: 'flex',
@@ -143,10 +210,10 @@ export function StreakCalendar({ streaks }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 15,
-              color: 'var(--text-primary)',
-              fontWeight: 600,
+              fontFamily: isMint ? 'var(--font-body)' : 'var(--font-display)',
+              fontSize: isMint ? 17 : 15,
+              color: isMint ? '#EAF2EE' : 'var(--text-primary)',
+              fontWeight: 700,
             }}
           >
             {MONTHS_AR[viewMonth]} {toEnglishNumerals(viewYear)}
@@ -155,10 +222,10 @@ export function StreakCalendar({ streaks }: Props) {
             <button
               onClick={goToToday}
               style={{
-                background: 'var(--gold-faint)',
-                border: '1px solid var(--border-mid)',
+                background: navBtnBg,
+                border: isMint ? navBtnBorder : '1px solid var(--border-mid)',
                 borderRadius: 6,
-                color: 'var(--gold-primary)',
+                color: navBtnColor,
                 fontSize: 10,
                 padding: '2px 8px',
                 cursor: 'pointer',
@@ -173,13 +240,14 @@ export function StreakCalendar({ streaks }: Props) {
         <button
           onClick={nextMonth}
           disabled={isCurrentMonth}
+          aria-label="الشهر التالي"
           style={{
-            background: isCurrentMonth ? 'transparent' : 'var(--gold-faint)',
-            border: `1px solid ${isCurrentMonth ? 'transparent' : 'var(--border-soft)'}`,
-            borderRadius: 8,
-            color: isCurrentMonth ? 'var(--text-muted)' : 'var(--gold-primary)',
-            width: 32,
-            height: 32,
+            background: isCurrentMonth ? 'transparent' : navBtnBg,
+            border: isCurrentMonth ? '1px solid transparent' : navBtnBorder,
+            borderRadius: isMint ? '50%' : 8,
+            color: isCurrentMonth ? 'var(--text-muted)' : navBtnColor,
+            width: isMint ? 36 : 32,
+            height: isMint ? 36 : 32,
             cursor: isCurrentMonth ? 'default' : 'pointer',
             fontSize: 14,
             display: 'flex',
@@ -192,15 +260,15 @@ export function StreakCalendar({ streaks }: Props) {
       </div>
 
       {/* أيام الأسبوع */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMint ? 6 : 4, marginBottom: 6 }}>
         {DAYS_AR.map((d) => (
           <div
             key={d}
             style={{
               textAlign: 'center',
               fontFamily: 'var(--font-body)',
-              fontSize: 10,
-              color: 'var(--text-muted)',
+              fontSize: isMint ? 12 : 10,
+              color: isMint ? '#808AA0' : 'var(--text-muted)',
               padding: '2px 0',
             }}
           >
@@ -210,10 +278,51 @@ export function StreakCalendar({ streaks }: Props) {
       </div>
 
       {/* الأيام */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: variant === 'mint' ? 6 : 4 }}>
         {cells.map((day, i) => {
           if (day === null) {
             return <div key={`empty-${i}`} />;
+          }
+
+          if (variant === 'mint') {
+            const { category, isToday } = getMintDayInfo(viewYear, viewMonth, day, streaks);
+            const style = mintCellStyle(category, isToday);
+            const marker = mintMarker(category, isToday);
+            const clickable = category === 'clean' || category === 'relapse';
+
+            return (
+              <button
+                key={day}
+                type="button"
+                disabled={!clickable}
+                aria-label={`${day} — ${category === 'clean' ? 'نظيف' : category === 'relapse' ? 'انتكاسة' : 'لا بيانات'}${isToday ? ' · اليوم' : ''}`}
+                onClick={() => {
+                  if (!clickable || !onDaySelect) return;
+                  onDaySelect(new Date(Date.UTC(viewYear, viewMonth, day)), category, isToday);
+                }}
+                style={{
+                  aspectRatio: '1',
+                  borderRadius: 13,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13,
+                  direction: 'ltr',
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  transition: 'all 0.2s',
+                  animation: isToday ? 'gentlePulse 4s ease-in-out infinite' : undefined,
+                  ...style,
+                }}
+              >
+                <span>{toEnglishNumerals(day)}</span>
+                <span style={{ fontSize: 9, lineHeight: 1, height: 9, color: marker.color }}>{marker.glyph}</span>
+              </button>
+            );
           }
 
           const dtype = getDayType(viewYear, viewMonth, day, streaks);
@@ -267,15 +376,22 @@ export function StreakCalendar({ streaks }: Props) {
           justifyContent: 'center',
         }}
       >
-        {[
-          { color: 'var(--gold-primary)', label: 'نظيف' },
-          { color: 'rgba(127,168,140,0.4)', label: 'سابق' },
-          { color: 'rgba(216,90,48,0.4)', label: 'انتكاسة' },
-        ].map(({ color, label }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, background: color }} />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)' }}>
-              {label}
+        {(variant === 'mint'
+          ? [
+              { label: 'نظيف', swatch: <span style={{ width: 18, height: 18, borderRadius: 6, background: 'rgba(46,190,128,.16)', border: '1px solid rgba(46,190,128,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5', fontSize: 10 }}>✓</span> },
+              { label: 'انتكاسة', swatch: <span style={{ width: 18, height: 18, borderRadius: 6, background: 'rgba(176,137,104,.18)', border: '1px solid rgba(176,137,104,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D8B99C', fontSize: 10 }}>◇</span> },
+              { label: 'اليوم', swatch: <span style={{ width: 18, height: 18, borderRadius: 6, border: '2px solid #5DCDA5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5', fontSize: 9 }}>•</span> },
+            ]
+          : [
+              { color: 'var(--gold-primary)', label: 'نظيف' },
+              { color: 'rgba(127,168,140,0.4)', label: 'سابق' },
+              { color: 'rgba(216,90,48,0.4)', label: 'انتكاسة' },
+            ]
+        ).map((item) => (
+          <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: variant === 'mint' ? 7 : 4 }}>
+            {'swatch' in item ? item.swatch : <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color }} />}
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: variant === 'mint' ? 12.5 : 10, color: variant === 'mint' ? '#B6BFCF' : 'var(--text-muted)' }}>
+              {item.label}
             </span>
           </div>
         ))}

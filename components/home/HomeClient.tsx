@@ -475,6 +475,10 @@ export function HomeClient() {
   } = useStreak();
 
   const [tip, setTip] = useState<Tip | null>(null);
+  // Computed client-side only (post-mount) — this page is statically prerendered,
+  // so a server-baked time-of-day greeting can disagree with the client's real
+  // clock and trip a React hydration mismatch (error #418).
+  const [greeting, setGreeting] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -482,6 +486,10 @@ export function HomeClient() {
       .then((r) => r.json())
       .then((d) => setTip(d?.tip ?? null))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setGreeting(getGreeting());
   }, []);
 
   return (
@@ -504,7 +512,7 @@ export function HomeClient() {
               marginBottom: 4,
             }}
           >
-            {getGreeting()}
+            {greeting}
           </div>
           <div
             style={{

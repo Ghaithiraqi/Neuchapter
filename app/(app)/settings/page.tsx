@@ -51,6 +51,25 @@ const PROFILE_CATEGORIES = [
   { key: 'goals' as const, label: 'الأهداف', tag: 'هدفك', iconBg: 'rgba(55,110,200,.14)', iconColor: '#6E9BE8' },
 ];
 
+// ─── خطة الطوارئ ────────────────────────────────────────────────────────────
+
+interface Contact { name: string; phone: string }
+
+interface EmergencyPlanForm {
+  contacts: Contact[];
+  actions: string[];
+  reminders: string[];
+  groundingItems: string[];
+}
+
+const EMPTY_PLAN: EmergencyPlanForm = { contacts: [], actions: [], reminders: [], groundingItems: [] };
+
+const PLAN_LIST_CATEGORIES = [
+  { key: 'actions' as const, label: 'إجراءات تساعدك', tag: 'إجراء', placeholder: 'أضف إجراءً...', iconBg: 'rgba(93,205,165,.14)', iconColor: '#5DCDA5' },
+  { key: 'reminders' as const, label: 'تذكيرات لنفسك', tag: 'تذكير', placeholder: 'أضف تذكيرًا...', iconBg: 'rgba(55,110,200,.14)', iconColor: '#6E9BE8' },
+  { key: 'groundingItems' as const, label: 'عناصر التأريض', tag: 'عنصر', placeholder: 'أضف عنصر تأريض...', iconBg: 'rgba(74,60,180,.18)', iconColor: '#8B7EE8' },
+];
+
 // ─── Card shell ─────────────────────────────────────────────────────────────
 
 const CARD: React.CSSProperties = {
@@ -168,6 +187,7 @@ function AddItemInput({ placeholder, onAdd }: { placeholder: string; onAdd: (val
       />
       <button
         onClick={() => { if (val.trim()) { onAdd(val.trim()); setVal(''); } }}
+        aria-label={placeholder}
         style={{
           background: 'rgba(93,205,165,.1)', border: '1px solid rgba(93,205,165,.3)',
           borderRadius: 12, color: '#5DCDA5', fontFamily: 'var(--font-body)', fontSize: 15,
@@ -208,6 +228,67 @@ function FactChip({ tag, iconBg, iconColor, text, onDelete }: {
   );
 }
 
+function ContactRow({ contact, onDelete }: { contact: Contact; onDelete: () => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16 }}>
+      <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(93,205,165,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5', flexShrink: 0 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <path d="M4.5 5.5c0 8 6 14 14 14 .8 0 1.5-.6 1.5-1.4v-2.3c0-.7-.5-1.3-1.2-1.4l-2.6-.4c-.6-.1-1.2.1-1.5.6l-.7 1c-2-1-3.6-2.6-4.6-4.6l1-.7c.5-.3.7-.9.6-1.5l-.4-2.6c-.1-.7-.7-1.2-1.4-1.2H5.9C5.1 4 4.5 4.7 4.5 5.5z" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 14, color: '#D2DAE6' }}>{contact.name || '—'}</div>
+        {contact.phone && (
+          <div style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12.5, color: '#939DB4', marginTop: 2, direction: 'ltr', textAlign: 'right' }}>{contact.phone}</div>
+        )}
+      </div>
+      <button
+        onClick={onDelete}
+        aria-label="حذف جهة الاتصال"
+        style={{ width: 26, height: 26, borderRadius: 8, background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#808AA0', flexShrink: 0, cursor: 'pointer' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function AddContactInput({ onAdd }: { onAdd: (contact: Contact) => void }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const submit = () => {
+    if (!name.trim() && !phone.trim()) return;
+    onAdd({ name: name.trim(), phone: phone.trim() });
+    setName('');
+    setPhone('');
+  };
+  return (
+    <div style={{ display: 'flex', gap: 6 }}>
+      <input
+        type="text" value={name} onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+        placeholder="الاسم"
+        style={{ flex: 1, background: 'rgba(0,0,0,.2)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, color: '#EAF2EE', fontFamily: 'var(--font-body)', fontSize: 13, padding: '9px 13px', outline: 'none', direction: 'rtl' }}
+      />
+      <input
+        type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+        placeholder="رقم الهاتف"
+        style={{ flex: 1, background: 'rgba(0,0,0,.2)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, color: '#EAF2EE', fontFamily: 'var(--font-body)', fontSize: 13, padding: '9px 13px', outline: 'none', direction: 'ltr', textAlign: 'right' }}
+      />
+      <button
+        onClick={submit}
+        aria-label="إضافة جهة اتصال"
+        style={{ background: 'rgba(93,205,165,.1)', border: '1px solid rgba(93,205,165,.3)', borderRadius: 12, color: '#5DCDA5', fontFamily: 'var(--font-body)', fontSize: 15, cursor: 'pointer', padding: '9px 16px', flexShrink: 0 }}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -230,6 +311,10 @@ export default function SettingsPage() {
   const [journeyStart, setJourneyStart] = useState<string | null>(null);
   const [streakStats, setStreakStats] = useState<{ longestStreak: number; totalCleanDays: number } | null>(null);
   const [entryCount, setEntryCount] = useState<number | null>(null);
+
+  const [plan, setPlan] = useState<EmergencyPlanForm>(EMPTY_PLAN);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [planSaveState, setPlanSaveState] = useState<SaveState>('idle');
 
   useEffect(() => {
     fetch('/api/settings')
@@ -262,6 +347,30 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((d: { total?: number }) => { if (typeof d.total === 'number') setEntryCount(d.total); })
       .catch(() => {});
+
+    fetch('/api/emergency-plan')
+      .then((r) => r.json())
+      .then((d: { plan?: EmergencyPlanForm }) => { if (d.plan) setPlan(d.plan); })
+      .catch(() => {})
+      .finally(() => setPlanLoading(false));
+  }, []);
+
+  const savePlan = useCallback(async (nextPlan: EmergencyPlanForm) => {
+    setPlan(nextPlan);
+    setPlanSaveState('saving');
+    try {
+      const res = await fetch('/api/emergency-plan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nextPlan),
+      });
+      if (!res.ok) throw new Error('failed');
+      setPlanSaveState('saved');
+      setTimeout(() => setPlanSaveState('idle'), 2500);
+    } catch {
+      setPlanSaveState('error');
+      setTimeout(() => setPlanSaveState('idle'), 3000);
+    }
   }, []);
 
   useEffect(() => {
@@ -584,6 +693,68 @@ export default function SettingsPage() {
             />
           }
         />
+      </div>
+
+      {/* ─── خطة الطوارئ ──────────────────────────────────────────────────── */}
+      <SectionLabel>خطة الطوارئ</SectionLabel>
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 12.5, color: '#939DB4', lineHeight: 1.7, marginBottom: 14 }}>
+          هذا ما يعرضه لك رفيقك في شاشة الطوارئ وقت الحاجة. اكتبها الآن، بينما أنت هادئ.
+        </div>
+
+        {planLoading ? (
+          <div style={{ ...CARD, padding: '34px 22px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
+              {[0, 0.15, 0.3].map((d, i) => (
+                <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#5DCDA5', animation: `blink 1.2s ease-in-out ${d}s infinite` }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#A8B8C4', fontWeight: 600, marginBottom: 8 }}>أشخاص أمانك</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+                {plan.contacts.map((c, idx) => (
+                  <ContactRow
+                    key={idx}
+                    contact={c}
+                    onDelete={() => savePlan({ ...plan, contacts: plan.contacts.filter((_, i) => i !== idx) })}
+                  />
+                ))}
+              </div>
+              <AddContactInput onAdd={(c) => savePlan({ ...plan, contacts: [...plan.contacts, c] })} />
+            </div>
+
+            {PLAN_LIST_CATEGORIES.map(({ key, label, tag, placeholder, iconBg, iconColor }) => (
+              <div key={key} style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#A8B8C4', fontWeight: 600, marginBottom: 8 }}>{label}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+                  {plan[key].map((item, idx) => (
+                    <FactChip
+                      key={idx}
+                      tag={tag}
+                      iconBg={iconBg}
+                      iconColor={iconColor}
+                      text={item}
+                      onDelete={() => savePlan({ ...plan, [key]: plan[key].filter((_, i) => i !== idx) })}
+                    />
+                  ))}
+                </div>
+                <AddItemInput
+                  placeholder={placeholder}
+                  onAdd={(val) => savePlan({ ...plan, [key]: [...plan[key], val] })}
+                />
+              </div>
+            ))}
+
+            <div style={{ height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {planSaveState === 'saving' && <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#939DB4' }}>جاري الحفظ...</span>}
+              {planSaveState === 'saved' && <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#5DCDA5' }}>✓ تم حفظ خطتك</span>}
+              {planSaveState === 'error' && <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#D85A30' }}>فشل الحفظ — حاول مجدداً</span>}
+            </div>
+          </>
+        )}
       </div>
 
       {/* ─── حفظ ──────────────────────────────────────────────────────────── */}

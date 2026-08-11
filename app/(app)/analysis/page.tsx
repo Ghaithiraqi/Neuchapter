@@ -328,7 +328,7 @@ function UrgeLogSection({ logs, total, filter, loading, onFilterChange }: {
             {filter === 'all' ? 'لا توجد لحظات مسجّلة بعد' : `لا توجد سجلات "${OUTCOME_META[filter]?.label ?? filter}"`}
           </div>
           <div style={{ fontSize: 12, color: '#6B7A8C', lineHeight: 1.7 }}>
-            سجّل اللحظات الصعبة من شاشة الـ SOS
+            سجّل اللحظات الصعبة من شاشة الطوارئ
           </div>
         </div>
       ) : (
