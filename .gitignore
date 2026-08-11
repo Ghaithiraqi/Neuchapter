@@ -55,3 +55,6 @@ public/fallback-*.js.map
 next-env.d.ts
 
 /app/generated/prisma
+
+# local design reference material — mockups/screenshots, not app code
+/design-reference/
