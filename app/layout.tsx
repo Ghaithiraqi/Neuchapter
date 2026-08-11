@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { SWUpdateReload } from '@/components/shared/SWUpdateReload';
 
 export const metadata: Metadata = {
   title: 'Neuchapter',
@@ -45,6 +46,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <SWUpdateReload />
         {children}
       </body>
     </html>
