@@ -284,7 +284,7 @@ function WriteSection({ onSaved }: { onSaved: () => void }) {
             width: '100%',
             minHeight: 120,
             maxHeight: 300,
-            overflowY: 'auto',
+            overflowY: 'auto', /* bounded-scroll: capped textarea, not a page container */
             background: 'transparent',
             border: 'none',
             color: '#EAF2EE',

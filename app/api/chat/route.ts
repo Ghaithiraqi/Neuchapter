@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
-import { calculateCost } from '@/lib/utils';
+import { calculateCost, toEnglishNumerals } from '@/lib/utils';
 import { getCurrentMilestone } from '@/lib/milestones';
 import { searchKnowledge } from '@/lib/knowledge';
 
@@ -117,7 +117,7 @@ async function getSuggestions(userMsg: string, aiResponse: string): Promise<stri
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return [];
     const parsed = JSON.parse(match[0]);
-    return (parsed.suggestions ?? []).slice(0, 3) as string[];
+    return ((parsed.suggestions ?? []) as string[]).slice(0, 3).map(toEnglishNumerals);
   } catch {
     return [];
   }
@@ -281,8 +281,9 @@ ${lastJournal ? `- آخر مذكرة (${new Date(lastJournal.createdAt).toLocale
               event.type === 'content_block_delta' &&
               event.delta.type === 'text_delta'
             ) {
-              fullText += event.delta.text;
-              send({ type: 'delta', text: event.delta.text });
+              const chunk = toEnglishNumerals(event.delta.text);
+              fullText += chunk;
+              send({ type: 'delta', text: chunk });
             }
           }
 

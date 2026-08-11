@@ -19,11 +19,13 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // يستثني: ملفات _next الثابتة، الصور، favicon، manifest، sw، الأيقونات،
+  // يستثني: ملفات _next الثابتة، الصور، favicon، manifest، sw، swe-worker
+  // (سكربت next-pwa الإضافي، اسمه يحمل hash يتغيّر كل build)، الأيقونات،
   // صفحة الدخول، مسارات المصادقة، وapi/health.
-  // manifest.json مهم بالذات: متصفحات لا تُرسل الكوكيز مع طلب <link rel="manifest">
-  // الأول، فيُعاد توجيهه لـ/unlock ويفشل تحليله كـJSON إن بقي محميًا.
+  // manifest.json وsw*.js مهمّان بالذات: يُطلبان قبل أي كوكي جلسة (تسجيل
+  // service worker يحدث بصرف النظر عن حالة الدخول)، فإن بقيا محميين
+  // يُعاد توجيههما لـ/unlock ويفشل تحليل ناتج HTML كـJS/JSON.
   matcher: [
-    '/((?!_next/static|_next/image|favicon|manifest\\.json|sw\\.js|icons/|unlock|api/auth|api/health).*)',
+    '/((?!_next/static|_next/image|favicon|manifest\\.json|sw\\.js|swe-worker-.*\\.js|icons/|unlock|api/auth|api/health).*)',
   ],
 };

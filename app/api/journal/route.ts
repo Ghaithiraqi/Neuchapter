@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
+import { toEnglishNumerals } from '@/lib/utils';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -36,10 +37,10 @@ ${content.slice(0, 1500)}`,
     if (!match) return;
 
     const parsed = JSON.parse(match[0]) as { summary?: string; themes?: string[] };
-    const aiSummary = typeof parsed.summary === 'string' ? parsed.summary.trim() : null;
+    const aiSummary = typeof parsed.summary === 'string' ? toEnglishNumerals(parsed.summary.trim()) : null;
     const aiThemes =
       Array.isArray(parsed.themes) && parsed.themes.length > 0
-        ? JSON.stringify(parsed.themes.slice(0, 4))
+        ? JSON.stringify(parsed.themes.slice(0, 4).map(toEnglishNumerals))
         : null;
 
     if (aiSummary || aiThemes) {

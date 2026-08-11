@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "prebuild": "node scripts/check-scroll-safety.mjs",
     "build": "prisma generate && next build --webpack",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "check:scroll": "node scripts/check-scroll-safety.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",

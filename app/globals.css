@@ -182,7 +182,19 @@
 
 *::-webkit-scrollbar { display: none; }
 
-html, body {
+/*
+ * overflow-x: hidden must live on exactly ONE of html/body, never both.
+ * Setting it on both forces the UA to compute overflow-y: auto on both
+ * (CSS overflow propagation: non-visible overflow-x forces the other axis
+ * to 'auto'), producing two independent, nested scroll containers instead
+ * of one document scroll. That's the "trapped scroll container" bug —
+ * keep this rule on body only.
+ */
+html {
+  min-height: 100%;
+}
+
+body {
   background: var(--bg-deep);
   color: var(--text-primary);
   font-family: 'Tajawal', sans-serif;

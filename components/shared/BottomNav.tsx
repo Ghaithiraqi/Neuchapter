@@ -123,7 +123,7 @@ export function BottomNav() {
     <div
       ref={barRef}
       style={{
-        position: 'fixed',
+        position: 'fixed', /* bottombar-ok: the one allowed page-chrome fixed element */
         bottom: 0,
         left: '50%',
         transform: 'translateX(-50%)',
