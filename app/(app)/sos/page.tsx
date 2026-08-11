@@ -519,7 +519,8 @@ function PlanView({ plan, loading, onBack }: {
 
 // ─── Call view ────────────────────────────────────────────────────────────────
 
-function CallView({ onBack }: { onBack: () => void }) {
+function CallView({ onBack, hotline }: { onBack: () => void; hotline: string | null }) {
+  const router = useRouter();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', padding: '0 30px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
@@ -534,47 +535,92 @@ function CallView({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      <a
-        href="tel:920033360"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 18,
-          padding: '20px 22px',
-          background: 'rgba(93,205,165,.08)',
-          border: '1px solid rgba(93,205,165,.3)',
-          borderRadius: 22,
-          textDecoration: 'none',
-          color: '#EAF2EE',
-          marginBottom: 16,
-        }}
-      >
-        <span
+      {hotline ? (
+        <a
+          href={`tel:${hotline}`}
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            background: 'rgba(93,205,165,.16)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#5DCDA5',
-            flexShrink: 0,
+            gap: 18,
+            padding: '20px 22px',
+            background: 'rgba(93,205,165,.08)',
+            border: '1px solid rgba(93,205,165,.3)',
+            borderRadius: 22,
+            textDecoration: 'none',
+            color: '#EAF2EE',
+            marginBottom: 16,
           }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M4.5 5.5c0 8 6 14 14 14 .8 0 1.5-.6 1.5-1.4v-2.3c0-.7-.5-1.3-1.2-1.4l-2.6-.4c-.6-.1-1.2.1-1.5.6l-.7 1c-2-1-3.6-2.6-4.6-4.6l1-.7c.5-.3.7-.9.6-1.5l-.4-2.6c-.1-.7-.7-1.2-1.4-1.2H5.9C5.1 4 4.5 4.7 4.5 5.5z" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <div>
-          <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 16, color: '#EAF2EE', marginBottom: 3 }}>
-            خط مساندة الصحة النفسية
+          <span
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: 'rgba(93,205,165,.16)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#5DCDA5',
+              flexShrink: 0,
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M4.5 5.5c0 8 6 14 14 14 .8 0 1.5-.6 1.5-1.4v-2.3c0-.7-.5-1.3-1.2-1.4l-2.6-.4c-.6-.1-1.2.1-1.5.6l-.7 1c-2-1-3.6-2.6-4.6-4.6l1-.7c.5-.3.7-.9.6-1.5l-.4-2.6c-.1-.7-.7-1.2-1.4-1.2H5.9C5.1 4 4.5 4.7 4.5 5.5z" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 16, color: '#EAF2EE', marginBottom: 3 }}>
+              خط مساندة الصحة النفسية
+            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, color: '#5DCDA5', direction: 'ltr' }}>
+              {hotline}
+            </div>
           </div>
-          <div style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, color: '#5DCDA5', direction: 'ltr' }}>
-            920033360
+        </a>
+      ) : (
+        <button
+          onClick={() => router.push('/settings')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 18,
+            padding: '20px 22px',
+            background: 'rgba(255,255,255,.03)',
+            border: '1px dashed rgba(255,255,255,.14)',
+            borderRadius: 22,
+            cursor: 'pointer',
+            textAlign: 'start',
+            color: '#EAF2EE',
+            marginBottom: 16,
+            minHeight: 44,
+          }}
+        >
+          <span
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: 'rgba(255,255,255,.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#9CA6BD',
+              flexShrink: 0,
+              fontSize: 22,
+            }}
+          >
+            +
+          </span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 16, color: '#EAF2EE', marginBottom: 3 }}>
+              لم يُحدَّد خط أزمات بعد
+            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 13, color: '#9CA6BD' }}>
+              أضِفه من الإعدادات — اضغط هنا
+            </div>
           </div>
-        </div>
-      </a>
+        </button>
+      )}
 
       <p
         style={{
@@ -601,14 +647,15 @@ export default function SOSPage() {
   const [view, setView] = useState<View>('main');
   const [plan, setPlan] = useState<PlanData | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [hotline, setHotline] = useState<string | null>(null);
 
-  // Preserved: POST /api/urge — log silently on mount
   useEffect(() => {
-    fetch('/api/urge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ intensity: 5, outcome: 'resisted' }),
-    }).catch(() => {});
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((d: { settings?: { crisisHotline?: string | null } }) => {
+        setHotline(d.settings?.crisisHotline ?? null);
+      })
+      .catch(() => {});
   }, []);
 
   // Preserved: GET /api/emergency-plan
@@ -638,9 +685,9 @@ export default function SOSPage() {
       <ChatTabSOS />
 
       {/*
-        Normal document-flow page. No position:fixed, no nested scroll container.
-        The document scrolls naturally. Background overrides the layout's gradient
-        for this specific route.
+        Normal document-flow page — no page-level fixed shell, no nested scroll
+        container. The document scrolls naturally. Background overrides the
+        layout's gradient for this specific route.
       */}
       <div
         style={{
@@ -688,7 +735,7 @@ export default function SOSPage() {
         )}
         {view === 'breathe' && <BreatheView onBack={() => setView('main')} />}
         {view === 'plan' && <PlanView plan={plan} loading={planLoading} onBack={() => setView('main')} />}
-        {view === 'call' && <CallView onBack={() => setView('main')} />}
+        {view === 'call' && <CallView onBack={() => setView('main')} hotline={hotline} />}
       </div>
     </>
   );

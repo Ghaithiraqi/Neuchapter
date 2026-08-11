@@ -10,6 +10,7 @@ interface Settings {
   bedtimeHour: number | null;
   reminderEnabled: boolean;
   voiceEnabled: boolean;
+  crisisHotline: string | null;
   profileSummary: string | null;
 }
 
@@ -217,6 +218,7 @@ export default function SettingsPage() {
     bedtimeHour: 23,
     reminderEnabled: true,
     voiceEnabled: true,
+    crisisHotline: null,
     profileSummary: null,
   });
   const [loading, setLoading] = useState(true);
@@ -240,6 +242,7 @@ export default function SettingsPage() {
             bedtimeHour: d.settings.bedtimeHour ?? null,
             reminderEnabled: d.settings.reminderEnabled ?? true,
             voiceEnabled: d.settings.voiceEnabled ?? true,
+            crisisHotline: d.settings.crisisHotline ?? null,
             profileSummary: d.settings.profileSummary ?? null,
           });
         }
@@ -561,12 +564,25 @@ export default function SettingsPage() {
           chevron
         />
         <SettingsRow
-          border={false}
           onClick={() => router.push('/sos')}
           icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M18.5 13.5a7 7 0 10-13 0M12 3v2M4 12H2M22 12h-2M5.5 5.5l1.5 1.5M17 7l1.5-1.5" strokeLinecap="round" /><path d="M4 15a2 2 0 012 2v1a2 2 0 01-4 0v-1a2 2 0 012-2zM20 15a2 2 0 012 2v1a2 2 0 01-4 0v-1a2 2 0 012-2z" strokeLinejoin="round" /></svg>}
           iconBg="rgba(55,110,200,.14)" iconColor="#6E9BE8"
           label="خطوط الدعم والمساعدة"
           chevron
+        />
+        <SettingsRow
+          border={false}
+          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4.5 5.5c0 8 6 14 14 14 .8 0 1.5-.6 1.5-1.4v-2.3c0-.7-.5-1.3-1.2-1.4l-2.6-.4c-.6-.1-1.2.1-1.5.6l-.7 1c-2-1-3.6-2.6-4.6-4.6l1-.7c.5-.3.7-.9.6-1.5l-.4-2.6c-.1-.7-.7-1.2-1.4-1.2H5.9C5.1 4 4.5 4.7 4.5 5.5z" strokeLinejoin="round" /></svg>}
+          iconBg="rgba(93,205,165,.14)" iconColor="#5DCDA5"
+          label="رقم خط الأزمات" hint="يظهر في زر «اتصل بشخص» بشاشة الطوارئ"
+          trailing={
+            <input
+              type="tel" value={form.crisisHotline ?? ''}
+              onChange={(e) => setForm((p) => ({ ...p, crisisHotline: e.target.value }))}
+              placeholder="غير مُعرَّف"
+              style={{ ...inputStyle, width: 120, textAlign: 'center', direction: 'ltr' }}
+            />
+          }
         />
       </div>
 

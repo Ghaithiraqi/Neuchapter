@@ -382,13 +382,16 @@ function SourceChips({ sources }: { sources?: MessageSource[] }) {
 function CrisisBanner({
   level, reason, onBreathe, onSupport, onDismiss,
 }: {
-  level: 'medium' | 'high';
+  level: 'medium' | 'high' | 'unknown';
   reason: string;
   onBreathe: () => void;
   onSupport: () => void;
   onDismiss: () => void;
 }) {
-  const title = level === 'high' ? 'أنا معك في هذه اللحظة' : 'لاحظت شيئًا يستحق الانتباه';
+  const title =
+    level === 'high' ? 'أنا معك في هذه اللحظة'
+    : level === 'medium' ? 'لاحظت شيئًا يستحق الانتباه'
+    : 'الدعم متاح لك دائمًا، إن احتجته';
   return (
     <div
       style={{
@@ -549,7 +552,7 @@ function ChatContent() {
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [crisisLevel, setCrisisLevel] = useState<'low' | 'medium' | 'high' | null>(null);
+  const [crisisLevel, setCrisisLevel] = useState<'low' | 'medium' | 'high' | 'unknown' | null>(null);
   const [crisisReason, setCrisisReason] = useState('');
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashFilter, setSlashFilter] = useState('');
@@ -664,12 +667,18 @@ function ChatContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-      const d = await res.json() as { level: 'low' | 'medium' | 'high'; reason: string };
+      if (!res.ok) throw new Error(`detect-crisis ${res.status}`);
+      const d = await res.json() as { level: 'low' | 'medium' | 'high' | 'unknown'; reason: string };
       if (d.level !== 'low') {
         setCrisisLevel(d.level);
         setCrisisReason(d.reason);
       }
-    } catch {/**/}
+    } catch {
+      // فشل الطلب نفسه (شبكة، انقطاع خادم) — لا نفترض "لا خطر" بصمت كما كان
+      // سابقًا؛ نعرض صف الدعم الهادئ لأننا لا نعرف الحالة الفعلية لهذه الرسالة.
+      setCrisisLevel('unknown');
+      setCrisisReason('');
+    }
   };
 
   // ─── Send Message ─────────────────────────────────────────────────────────

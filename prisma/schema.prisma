@@ -112,6 +112,7 @@ model UserSettings {
   bedtimeHour      Int?      @default(23)
   reminderEnabled  Boolean   @default(true)
   voiceEnabled     Boolean   @default(true)
+  crisisHotline    String?
   profileSummary   String?   @db.Text
   profileUpdatedAt DateTime?
   updatedAt        DateTime  @updatedAt
