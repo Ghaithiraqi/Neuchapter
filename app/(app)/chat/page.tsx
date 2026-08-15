@@ -603,6 +603,16 @@ function ChatContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrl = useRef<string | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  // The composer's own rendered height — measured live so it stays correct
+  // however tall the composer grows (voice timer, error tooltip, multi-line
+  // input). Combined with --bottom-bar-height + the 14px gap (the same terms
+  // the composer's own `bottom` offset uses) this gives the full on-screen
+  // band the fixed composer covers, measured up from the viewport's bottom
+  // edge — NOT just the composer's height, since it also floats above the
+  // bottom nav.
+  const [composerHeight, setComposerHeight] = useState(76);
+  const composerClearance = `calc(var(--bottom-bar-height, 160px) + 14px + ${composerHeight}px)`;
 
   const currentMode = CHAT_MODES.find((m) => m.id === modeId) ?? CHAT_MODES[0];
 
@@ -659,7 +669,21 @@ function ChatContent() {
       .finally(() => setRestoring(false));
   }, [sessionId]);
 
-  useEffect(() => { scrollBottom(); }, [messages, streamingText, scrollBottom]);
+  useEffect(() => { scrollBottom(); }, [messages, streamingText, crisisLevel, showCheckin, scrollBottom]);
+
+  // Measure the fixed composer's real height so the trailing spacer below the
+  // messages list always reserves exactly enough room to clear it — no message
+  // bubble can ever render underneath it, regardless of how content above
+  // shifts (e.g. an async crisis banner popping in).
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    const update = () => setComposerHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -1275,7 +1299,9 @@ function ChatContent() {
           )
         )}
 
-        <div ref={messagesEndRef} />
+        {/* scrollMarginBottom keeps scrollIntoView from tucking the last message
+            under the fixed composer — it stops short by exactly its height. */}
+        <div ref={messagesEndRef} style={{ scrollMarginBottom: composerClearance }} />
       </div>
 
       {/* ─── Suggestions ─────────────────────────────────────────────────── */}
@@ -1306,12 +1332,23 @@ function ChatContent() {
         </div>
       )}
 
-      {/* ─── Sticky input area ───────────────────────────────────────────── */}
+      {/* ─── Spacer reserving flow space for the fixed composer below ─────── */}
+      {/* The composer below is taken out of normal flow, so without this the
+          page's real scrollable height wouldn't account for it — letting
+          messages scroll into the space it visually covers. */}
+      <div aria-hidden style={{ height: composerClearance }} />
+
+      {/* ─── Fixed input area ───────────────────────────────────────────── */}
       <div
+        ref={composerRef}
         style={{
-          position: 'sticky',
+          position: 'fixed', /* bottombar-ok: pinned directly above the bottom nav, mirrors BottomNav's fixed shell */
           bottom: 'calc(var(--bottom-bar-height, 160px) + 14px)',
-          zIndex: 6,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: 420,
+          zIndex: 20,
           padding: '8px 20px 0',
         }}
       >
@@ -1360,12 +1397,19 @@ function ChatContent() {
         )}
 
         {/* Composed pill bar — textarea + mic + send */}
+        {/* Background must read as solid, not a faint tint: this pill sits fixed
+            over content that keeps growing during streaming, so anything short
+            of near-opaque + blur lets scrolling text bleed through underneath
+            it (see the "transparent during streaming" bug). Matches the header's
+            frosted treatment above for visual consistency. */}
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             gap: 6,
-            background: 'rgba(255,255,255,.045)',
+            background: 'rgba(17,22,38,.94)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             border: `1px solid ${inputFocused ? 'rgba(93,205,165,.4)' : 'rgba(255,255,255,.09)'}`,
             borderRadius: 26,
             padding: '6px 6px 6px 18px',
