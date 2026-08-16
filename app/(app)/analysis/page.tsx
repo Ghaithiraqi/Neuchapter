@@ -24,6 +24,13 @@ interface MoodDay {
   count: number;
 }
 
+interface IntensityDay {
+  date: string;
+  dayName: string;
+  intensity: number | null; // 1-10 average, unlike MoodDay's 1-7 scale
+  count: number;
+}
+
 interface HourlySlot {
   hour: number;
   count: number;
@@ -46,6 +53,7 @@ interface AnalysisData {
   deltas: { attendance: number; resilience: number; sessions: number; mood: number | null };
   trends: { attendance: Trend; resilience: Trend; sessions: Trend; mood: Trend };
   moodTimeline: MoodDay[];
+  intensityTimeline: IntensityDay[];
   hourlyDistribution: HourlySlot[];
   peakHour: HourlySlot;
   weekStart: string;
@@ -95,11 +103,13 @@ function moodDotStyle(mood: number | null): { background: string; boxShadow: str
   return { background: '#D85A30', boxShadow: '0 0 10px rgba(216,90,48,.4)' };
 }
 
-function barGradient(mood: number | null): string {
-  if (mood === null) return 'rgba(255,255,255,.08)';
-  if (mood >= 6) return 'linear-gradient(180deg,#2EBE80,#5DCDA5)';
-  if (mood >= 4) return 'linear-gradient(180deg,#376EC8,#259696)';
-  return 'linear-gradient(180deg,#4A3CB4,#376EC8)';
+// Intensity is 1-10 and "high" is bad (severe craving), so the color
+// direction is inverted from moodDotStyle's scale (where "high" is good).
+function intensityGradient(intensity: number | null): string {
+  if (intensity === null) return 'rgba(255,255,255,.08)';
+  if (intensity >= 7) return 'linear-gradient(180deg,#D85A30,#e0774f)';
+  if (intensity >= 4) return 'linear-gradient(180deg,#4A3CB4,#376EC8)';
+  return 'linear-gradient(180deg,#2EBE80,#5DCDA5)';
 }
 
 // For the period bar chart (hourly distribution → 4 periods)
@@ -469,15 +479,7 @@ export default function AnalysisPage() {
     : 100;
 
   const moodTimeline = data?.moodTimeline ?? [];
-
-  // Mood delta % for badge
-  const moodDeltaPct = (() => {
-    if (!data) return null;
-    const cur = data.metrics.moodAvg;
-    const prev = data.previousMetrics?.moodAvg;
-    if (cur == null || prev == null || prev === 0) return null;
-    return Math.round(((cur - prev) / prev) * 100);
-  })();
+  const intensityTimeline = data?.intensityTimeline ?? [];
 
   return (
     <div dir="rtl" style={{ padding: '20px 20px 0', fontFamily: 'var(--font-body)' }}>
@@ -518,27 +520,15 @@ export default function AnalysisPage() {
       {!loading && (
         <>
           {/* ─── شدّة الرغبات عبر الأسبوع ─────────────────────────────────── */}
-          {moodTimeline.length > 0 && (
+          {intensityTimeline.length > 0 && (
             <div style={{ ...CARD, padding: '20px 20px 16px', marginBottom: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontWeight: 500, fontSize: 15, color: '#EAF2EE' }}>شدّة الرغبات عبر الأسبوع</span>
-                {moodDeltaPct !== null && (
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: moodDeltaPct >= 0 ? '#2EBE80' : '#D85A30',
-                      background: moodDeltaPct >= 0 ? 'rgba(46,190,128,.10)' : 'rgba(216,90,48,.10)',
-                      borderRadius: 20, padding: '4px 11px',
-                    }}
-                  >
-                    {moodDeltaPct >= 0 ? '+' : ''}{toEnglishNumerals(moodDeltaPct)}%
-                  </span>
-                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 6 }}>
-                {moodTimeline.map((day, i) => {
-                  const heightPct = day.mood !== null
-                    ? Math.max(8, Math.round((day.mood / 7) * 100))
+                {intensityTimeline.map((day, i) => {
+                  const heightPct = day.intensity !== null
+                    ? Math.max(8, Math.round((day.intensity / 10) * 100))
                     : 8;
                   return (
                     <div
@@ -553,8 +543,8 @@ export default function AnalysisPage() {
                           width: '100%', maxWidth: 32,
                           height: `${heightPct}%`,
                           borderRadius: '7px 7px 3px 3px',
-                          background: barGradient(day.mood),
-                          opacity: day.mood === null ? 0.4 : 1,
+                          background: intensityGradient(day.intensity),
+                          opacity: day.intensity === null ? 0.4 : 1,
                           transformOrigin: 'bottom',
                           animation: `ncRise ${0.8 + i * 0.08}s ease-out`,
                         }}

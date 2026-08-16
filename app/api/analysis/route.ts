@@ -45,6 +45,13 @@ interface HourlySlot {
   successCount: number;
 }
 
+interface IntensityDay {
+  date: string;
+  dayName: string;
+  intensity: number | null; // 1-10 average, unlike moodTimeline's 1-7 scale
+  count: number;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -153,6 +160,35 @@ async function computeMoodTimeline(now: Date) {
   });
 }
 
+async function computeIntensityTimeline(now: Date): Promise<IntensityDay[]> {
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const allUrges = await db.urgeLog.findMany({
+    where: { timestamp: { gte: sevenDaysAgo } },
+    select: { timestamp: true, intensity: true },
+  });
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const dayStart = new Date(now.getTime() - (6 - i) * 86400000);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart.getTime() + 86400000);
+
+    const dayUrges = allUrges.filter((u) => u.timestamp >= dayStart && u.timestamp < dayEnd);
+    const intensity =
+      dayUrges.length > 0
+        ? Math.round((dayUrges.reduce((s, u) => s + u.intensity, 0) / dayUrges.length) * 10) / 10
+        : null;
+
+    return {
+      date: dayStart.toISOString().split('T')[0],
+      dayName: dayStart.toLocaleDateString('ar', { weekday: 'short' }),
+      intensity,
+      count: dayUrges.length,
+    };
+  });
+}
+
 async function computeHourlyDistribution(weekAgo: Date): Promise<{ hourlyDistribution: HourlySlot[]; peakHour: HourlySlot }> {
   const urges = await db.urgeLog.findMany({
     where: { timestamp: { gte: weekAgo } },
@@ -183,11 +219,12 @@ export async function GET(req: NextRequest) {
 
     const currentWeekStart = getStableWeekStart();
 
-    const [metrics, previousMetrics, moodTimeline, hourlyResult, latestAnalysis] =
+    const [metrics, previousMetrics, moodTimeline, intensityTimeline, hourlyResult, latestAnalysis] =
       await Promise.all([
         computeMetricsForRange(weekAgo),
         computeMetricsForRange(twoWeeksAgo, weekAgo),
         computeMoodTimeline(now),
+        computeIntensityTimeline(now),
         computeHourlyDistribution(weekAgo),
         db.weeklyAnalysis.findUnique({ where: { weekStart: currentWeekStart } }),
       ]);
@@ -200,6 +237,7 @@ export async function GET(req: NextRequest) {
       deltas,
       trends,
       moodTimeline,
+      intensityTimeline,
       hourlyDistribution: hourlyResult.hourlyDistribution,
       peakHour: hourlyResult.peakHour,
       weekStart: weekAgo.toISOString(),
@@ -226,10 +264,11 @@ export async function POST(req: NextRequest) {
 
     const stableWeekStart = getStableWeekStart();
 
-    const [metrics, previousMetrics, moodTimeline, hourlyResult] = await Promise.all([
+    const [metrics, previousMetrics, moodTimeline, intensityTimeline, hourlyResult] = await Promise.all([
       computeMetricsForRange(weekAgo),
       computeMetricsForRange(twoWeeksAgo, weekAgo),
       computeMoodTimeline(now),
+      computeIntensityTimeline(now),
       computeHourlyDistribution(weekAgo),
     ]);
 
@@ -240,6 +279,7 @@ export async function POST(req: NextRequest) {
       deltas,
       trends,
       moodTimeline,
+      intensityTimeline,
       hourlyDistribution: hourlyResult.hourlyDistribution,
       peakHour: hourlyResult.peakHour,
       weekStart: weekAgo.toISOString(),
