@@ -60,10 +60,69 @@ function Waveform() {
   );
 }
 
+// ─── Mood picker — colors mirror /analysis's mood-dot scale (1-7) ─────────────
+
+const MOOD_SCALE = [1, 2, 3, 4, 5, 6, 7] as const;
+
+function moodPickerColor(n: number): string {
+  if (n >= 7) return '#5DCDA5';
+  if (n >= 6) return '#2EBE80';
+  if (n >= 5) return '#376EC8';
+  if (n >= 4) return '#259696';
+  if (n >= 3) return '#4A3CB4';
+  return '#D85A30';
+}
+
+function MoodPicker({ value, onChange }: { value: number | null; onChange: (v: number | null) => void }) {
+  return (
+    <div>
+      <div style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#8A93A6', marginBottom: 10 }}>
+        كيف شعورك الآن؟ <span style={{ color: '#5B6478', fontWeight: 300 }}>(اختياري)</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {MOOD_SCALE.map((n) => {
+          const selected = value === n;
+          const color = moodPickerColor(n);
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(selected ? null : n)}
+              aria-label={`مزاج ${n} من 7${selected ? ' — محدد' : ''}`}
+              aria-pressed={selected}
+              style={{
+                flex: 1, minHeight: 44,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: selected ? 20 : 13,
+                  height: selected ? 20 : 13,
+                  borderRadius: '50%',
+                  background: color,
+                  opacity: selected ? 1 : 0.4,
+                  boxShadow: selected ? `0 0 10px ${color}99` : 'none',
+                  display: 'block',
+                  transition: 'all .25s ease',
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Voice Section ────────────────────────────────────────────────────────────
 
 function VoiceSection({ onSaved }: { onSaved: () => void }) {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [mood, setMood] = useState<number | null>(null);
 
   const handleTranscript = useCallback(async (text: string) => {
     setSaveState('saving');
@@ -71,10 +130,11 @@ function VoiceSection({ onSaved }: { onSaved: () => void }) {
       const res = await fetch('/api/journal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text, type: 'voice' }),
+        body: JSON.stringify({ content: text, type: 'voice', mood }),
       });
       if (res.ok) {
         setSaveState('saved');
+        setMood(null);
         onSaved();
         setTimeout(() => setSaveState('idle'), 3000);
       } else {
@@ -83,7 +143,7 @@ function VoiceSection({ onSaved }: { onSaved: () => void }) {
     } catch {
       setSaveState('error');
     }
-  }, [onSaved]);
+  }, [onSaved, mood]);
 
   const { status, toggle, errorMessage, reset } = useVoiceRecorder({ onTranscript: handleTranscript });
   const timer = useTimer(status === 'recording');
@@ -227,6 +287,13 @@ function VoiceSection({ onSaved }: { onSaved: () => void }) {
           </>
         )}
       </div>
+
+      {/* Mood picker — set before recording; carried into the auto-save on transcript */}
+      {!isRecording && !isBusy && saveState !== 'saved' && (
+        <div style={{ width: '100%', maxWidth: 280 }}>
+          <MoodPicker value={mood} onChange={setMood} />
+        </div>
+      )}
     </div>
   );
 }
@@ -235,6 +302,7 @@ function VoiceSection({ onSaved }: { onSaved: () => void }) {
 
 function WriteSection({ onSaved }: { onSaved: () => void }) {
   const [text, setText] = useState('');
+  const [mood, setMood] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -254,11 +322,11 @@ function WriteSection({ onSaved }: { onSaved: () => void }) {
       const res = await fetch('/api/journal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text, type: 'text' }),
+        body: JSON.stringify({ content: text, type: 'text', mood }),
       });
       if (res.ok) {
         setSaved(true);
-        setTimeout(() => { setText(''); setSaved(false); onSaved(); }, 1200);
+        setTimeout(() => { setText(''); setMood(null); setSaved(false); onSaved(); }, 1200);
       } else { setError('خطأ في الحفظ'); }
     } catch { setError('تعذّر الاتصال'); }
     finally { setSaving(false); }
@@ -296,7 +364,10 @@ function WriteSection({ onSaved }: { onSaved: () => void }) {
             display: 'block',
           }}
         />
-        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+          <MoodPicker value={mood} onChange={setMood} />
+        </div>
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {error
             ? <span style={{ fontSize: 13, color: '#E08A6E', fontFamily: 'var(--font-body)' }}>{error}</span>
             : <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#808AA0' }}>{toEnglishNumerals(text.length)} حرف</span>

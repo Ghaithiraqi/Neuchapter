@@ -141,7 +141,7 @@ export default function JournalEntryPage() {
               <div style={{ padding: '10px 18px', background: 'rgba(93,205,165,.08)', border: '1px solid rgba(93,205,165,.22)', borderRadius: 16 }}>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#8A93A6', marginBottom: 3 }}>المزاج</div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 20, color: '#5DCDA5', fontWeight: 700 }}>
-                  {toEnglishNumerals(entry.mood)}/10
+                  {toEnglishNumerals(entry.mood)}/7
                 </div>
               </div>
             )}
