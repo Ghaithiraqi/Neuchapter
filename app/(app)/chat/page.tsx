@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toEnglishNumerals } from '@/lib/utils';
 import { useVoiceRecorder } from '@/lib/hooks/useVoiceRecorder';
+import { useMediaQuery } from '@/lib/hooks/useMediaQuery';
 
 // ─── Chat Modes ────────────────────────────────────────────────────────────────
 
@@ -112,6 +113,38 @@ function buildMemoryChips(raw: string | null | undefined): string[] {
   } catch {
     return [];
   }
+}
+
+// ─── Wide layout — recent sessions sidebar ─────────────────────────────────
+
+interface SessionSummary {
+  id: number;
+  mode: string;
+  updatedAt: string;
+  messageCount: number;
+  firstMessage: string;
+}
+
+const SESSION_MODE_LABELS: Record<string, string> = {
+  general: '💬 عام',
+  journal: '📖 مذكرة',
+  sos: '🆘 طوارئ',
+};
+
+function sessionModeLabel(mode: string): string {
+  const known = CHAT_MODES.find((m) => m.id === mode);
+  if (known) return `${known.icon} ${known.name}`;
+  return SESSION_MODE_LABELS[mode] ?? `💬 ${mode}`;
+}
+
+function sessionDateLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diffDays <= 0) return 'اليوم';
+  if (diffDays === 1) return 'أمس';
+  if (diffDays < 7) return `قبل ${toEnglishNumerals(diffDays)} أيام`;
+  return toEnglishNumerals(d.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }));
 }
 
 // ─── Bubble treatments ──────────────────────────────────────────────────────────
@@ -589,6 +622,14 @@ function ChatContent() {
   const [modesOpen, setModesOpen] = useState(false);
   const [memoryChips, setMemoryChips] = useState<string[]>([]);
 
+  // ─── Wide (desktop) layout — opt-in, portrait stays default everywhere ───
+  const isDesktopViewport = useMediaQuery('(min-width: 1024px)');
+  const [wideLayoutPref, setWideLayoutPref] = useState(false);
+  const showWide = wideLayoutPref && isDesktopViewport;
+  const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
+  const rightColRef = useRef<HTMLDivElement>(null);
+  const [wideComposerRect, setWideComposerRect] = useState<{ left: number; width: number } | null>(null);
+
   const [recordSeconds, setRecordSeconds] = useState(0);
 
   const { isRecording, isProcessing, errorMessage: voiceError, toggle: toggleVoice } = useVoiceRecorder({
@@ -632,6 +673,51 @@ function ChatContent() {
       })
       .catch(() => {});
   }, []);
+
+  // ─── Wide layout preference — stored default is portrait (unset) ────────
+  useEffect(() => {
+    if (localStorage.getItem('nc_chat_wide') === '1') setWideLayoutPref(true);
+  }, []);
+
+  const toggleWideLayout = useCallback(() => {
+    setWideLayoutPref((prev) => {
+      const next = !prev;
+      localStorage.setItem('nc_chat_wide', next ? '1' : '0');
+      return next;
+    });
+  }, []);
+
+  // Recent sessions for the wide sidebar — only fetched when the desktop
+  // viewport is even possible, so mobile users never pay for this request.
+  useEffect(() => {
+    if (!isDesktopViewport) return;
+    fetch('/api/chat/history')
+      .then((r) => r.json())
+      .then((d: { sessions?: SessionSummary[] }) => {
+        if (d.sessions) setRecentSessions(d.sessions.slice(0, 8));
+      })
+      .catch(() => {});
+  }, [isDesktopViewport]);
+
+  // Track the right column's on-screen rect so the fixed composer (which
+  // must stay outside the flex flow for the --composer-height measurement
+  // below to keep working) can align itself under that column instead of
+  // the full viewport, matching where it visually reads as "part of" the
+  // right column in the wide layout.
+  useEffect(() => {
+    if (!showWide) { setWideComposerRect(null); return; }
+    const el = rightColRef.current;
+    if (!el) return;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setWideComposerRect({ left: r.left, width: r.width });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, [showWide]);
 
   // ─── Restore session ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -948,6 +1034,13 @@ function ChatContent() {
     router.replace('/chat', { scroll: false });
   };
 
+  // ─── Restore a session from the wide sidebar's recent-chats list ─────────
+  const openSession = (id: number) => {
+    if (id === sessionId) return;
+    setSessionId(id);
+    router.replace(`/chat?session=${id}`, { scroll: false });
+  };
+
   // ─── Key handler ──────────────────────────────────────────────────────────
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -965,9 +1058,220 @@ function ChatContent() {
   const hour = new Date().getHours();
   const today = toEnglishNumerals(new Date().toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' }));
 
+  // Message list — shared verbatim between portrait and wide layouts so
+  // streaming/TTS/save/source-chip behavior can never drift between them.
+  // Only the bubble max-width and outer container styling differ.
+  const renderMessages = (bubbleMaxWidth: number | string, containerStyle: React.CSSProperties) => (
+    <div style={containerStyle}>
+      {restoring && (
+        <div style={{ textAlign: 'center', color: '#6B7A8C', fontSize: 12, fontFamily: 'var(--font-body)' }}>
+          جاري استرجاع المحادثة...
+        </div>
+      )}
+
+      {!restoring && !sessionId && (
+        <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#909BB2', marginBottom: 2 }}>
+          {today}
+        </div>
+      )}
+
+      {messages.map((msg, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'assistant' ? 'flex-start' : 'flex-end' }}>
+          <div
+            style={{
+              maxWidth: bubbleMaxWidth,
+              padding: '13px 16px',
+              fontSize: 15,
+              lineHeight: 1.85,
+              fontFamily: 'var(--font-body)',
+              fontWeight: 400,
+              position: 'relative',
+              ...(msg.role === 'assistant' ? BUBBLE_ASSISTANT : BUBBLE_USER),
+            }}
+          >
+            {/* علامة الوضع — فقط لرسائل الجلسة الحالية وعند وضع غير الافتراضي */}
+            {msg.role === 'assistant' && msg.mode && msg.mode !== 'support' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 11, letterSpacing: 0.3, color: '#5DCDA5' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+                {CHAT_MODES.find((m) => m.id === msg.mode)?.name}
+              </div>
+            )}
+            {msg.content}
+          </div>
+
+          {/* بطاقات المصادر — لرسائل المساعد فقط */}
+          {msg.role === 'assistant' && (
+            <SourceChips sources={msg.sources} />
+          )}
+
+          {/* Action buttons for assistant messages */}
+          {msg.role === 'assistant' && (
+            <div style={{ display: 'flex', gap: 6, marginTop: 5, paddingRight: 4, alignItems: 'center' }}>
+              {/* TTS button */}
+              <button
+                onClick={() => playTts(msg.content, i)}
+                disabled={ttsLoading === i}
+                style={{
+                  padding: '3px 6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: playingTts === i ? '#5DCDA5' : '#6B7A8C',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  cursor: ttsLoading === i ? 'wait' : 'pointer',
+                  opacity: ttsLoading === i ? 0.5 : 1,
+                }}
+                title={playingTts === i ? 'إيقاف' : 'استمع'}
+              >
+                {ttsLoading === i ? '⏳' : playingTts === i ? '🔇' : '🔊'}
+              </button>
+
+              {/* Save button */}
+              <button
+                onClick={() => msg.savedId ? unsaveMessage(msg, i) : saveMessage(msg, i)}
+                style={{
+                  padding: '3px 6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: msg.savedId ? '#5DCDA5' : '#6B7A8C',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                }}
+                title={msg.savedId ? 'إزالة الحفظ' : 'حفظ'}
+              >
+                {msg.savedId ? '⭐' : '☆'}
+              </button>
+
+              {msg.time && (
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C' }}>
+                  {msg.time}
+                </span>
+              )}
+            </div>
+          )}
+          {msg.role === 'user' && msg.time && (
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C', marginTop: 4, paddingLeft: 4 }}>
+              {msg.time}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Streaming indicator */}
+      {loading && (
+        streamingText ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div
+              style={{
+                maxWidth: bubbleMaxWidth,
+                padding: '13px 16px',
+                fontSize: 15,
+                lineHeight: 1.85,
+                fontFamily: 'var(--font-body)',
+                ...BUBBLE_ASSISTANT,
+              }}
+            >
+              {streamingText}
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 2,
+                  height: 14,
+                  background: '#5DCDA5',
+                  marginRight: 2,
+                  verticalAlign: 'middle',
+                  animation: 'blink 1s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <TypingDots />
+        )
+      )}
+
+      {/* scrollMarginBottom keeps scrollIntoView from tucking the last message
+          under the fixed composer — it stops short by exactly its height. */}
+      <div ref={messagesEndRef} style={{ scrollMarginBottom: composerClearance }} />
+    </div>
+  );
+
+  const crisisBannerEl = crisisLevel && crisisLevel !== 'low' && (
+    <CrisisBanner
+      level={crisisLevel}
+      reason={crisisReason}
+      onBreathe={() => setShowBreathing(true)}
+      onSupport={() => router.push('/sos')}
+      onDismiss={() => setCrisisLevel(null)}
+    />
+  );
+
+  const checkinBannerEl = showCheckin && (
+    <CheckinBanner
+      hour={hour}
+      onStart={() => startCheckin(hour < 12 ? 'morning' : 'evening')}
+      onDismiss={() => { setShowCheckin(false); localStorage.setItem('jaddidni_checkin', new Date().toISOString().split('T')[0]); }}
+    />
+  );
+
+  const humanSupportRow = (
+    <button
+      onClick={() => router.push('/sos')}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 11,
+        margin: '10px 20px 0', padding: '12px 15px',
+        background: 'rgba(93,205,165,.06)', border: '1px solid rgba(93,205,165,.22)',
+        borderRadius: 16, cursor: 'pointer', textAlign: 'right',
+      }}
+    >
+      <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: 'rgba(93,205,165,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5' }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5-2.5 4.5-9.5 9-9.5 9z" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12.5, lineHeight: 1.6, color: '#B6BFCF', textAlign: 'right' }}>
+        تحتاج دعمًا بشريًا؟ خطوط الأزمات وأشخاص الثقة على بُعد لمسة.
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5DCDA5" strokeWidth="1.6" style={{ flexShrink: 0, transform: 'scaleX(-1)' }}>
+        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+
+  const suggestionsEl = suggestions.length > 0 && !loading && (
+    <div style={{ padding: '0 20px 10px', display: 'flex', gap: 6, overflowX: 'auto' }}>
+      {suggestions.map((s, i) => (
+        <button
+          key={i}
+          onClick={() => { setSuggestions([]); sendMessage(s); }}
+          style={{
+            flexShrink: 0,
+            padding: '9px 15px', minHeight: 40,
+            background: 'rgba(255,255,255,.04)',
+            border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 18,
+            color: '#D2DAE6',
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.3s ease',
+          }}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
+      {!showWide && (
+      <>
       {/* ─── Sticky header ───────────────────────────────────────────────── */}
       <div
         style={{
@@ -1045,6 +1349,24 @@ function ChatContent() {
                 <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
             </button>
+            {isDesktopViewport && (
+              <button
+                onClick={toggleWideLayout}
+                aria-label="تخطيط واسع"
+                aria-pressed={showWide}
+                title="تخطيط واسع"
+                style={{
+                  width: 36, height: 36, borderRadius: 12,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)',
+                  color: '#6B7A8C', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3" y="4" width="18" height="16" rx="3" />
+                  <path d="M9.5 4v16" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1126,231 +1448,279 @@ function ChatContent() {
       </div>
 
       {/* ─── Crisis banner — calm, never alarming ───────────────────────── */}
-      {crisisLevel && crisisLevel !== 'low' && (
-        <CrisisBanner
-          level={crisisLevel}
-          reason={crisisReason}
-          onBreathe={() => setShowBreathing(true)}
-          onSupport={() => router.push('/sos')}
-          onDismiss={() => setCrisisLevel(null)}
-        />
-      )}
+      {crisisBannerEl}
 
       {/* ─── Check-in banner ─────────────────────────────────────────────── */}
-      {showCheckin && (
-        <CheckinBanner
-          hour={hour}
-          onStart={() => startCheckin(hour < 12 ? 'morning' : 'evening')}
-          onDismiss={() => { setShowCheckin(false); localStorage.setItem('jaddidni_checkin', new Date().toISOString().split('T')[0]); }}
-        />
-      )}
+      {checkinBannerEl}
 
       {/* ─── Human-support row — دائم، وليس فقط عند رصد أزمة ─────────────── */}
-      <button
-        onClick={() => router.push('/sos')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 11,
-          margin: '10px 20px 0', padding: '12px 15px',
-          background: 'rgba(93,205,165,.06)', border: '1px solid rgba(93,205,165,.22)',
-          borderRadius: 16, cursor: 'pointer', textAlign: 'right',
-        }}
-      >
-        <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: 'rgba(93,205,165,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5DCDA5' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5-2.5 4.5-9.5 9-9.5 9z" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12.5, lineHeight: 1.6, color: '#B6BFCF', textAlign: 'right' }}>
-          تحتاج دعمًا بشريًا؟ خطوط الأزمات وأشخاص الثقة على بُعد لمسة.
-        </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5DCDA5" strokeWidth="1.6" style={{ flexShrink: 0, transform: 'scaleX(-1)' }}>
-          <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      {humanSupportRow}
 
       {/* ─── Messages ─────────────────────────────────────────────────────── */}
-      <div style={{ padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(240px, calc(100vh - 430px))', justifyContent: 'flex-end' }}>
-        {restoring && (
-          <div style={{ textAlign: 'center', color: '#6B7A8C', fontSize: 12, fontFamily: 'var(--font-body)' }}>
-            جاري استرجاع المحادثة...
-          </div>
-        )}
-
-        {!restoring && !sessionId && (
-          <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 12.5, color: '#909BB2', marginBottom: 2 }}>
-            {today}
-          </div>
-        )}
-
-        {messages.map((msg, i) => (
-          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'assistant' ? 'flex-start' : 'flex-end' }}>
-            <div
-              style={{
-                maxWidth: '85%',
-                padding: '13px 16px',
-                fontSize: 15,
-                lineHeight: 1.85,
-                fontFamily: 'var(--font-body)',
-                fontWeight: 400,
-                position: 'relative',
-                ...(msg.role === 'assistant' ? BUBBLE_ASSISTANT : BUBBLE_USER),
-              }}
-            >
-              {/* علامة الوضع — فقط لرسائل الجلسة الحالية وعند وضع غير الافتراضي */}
-              {msg.role === 'assistant' && msg.mode && msg.mode !== 'support' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 11, letterSpacing: 0.3, color: '#5DCDA5' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
-                  {CHAT_MODES.find((m) => m.id === msg.mode)?.name}
-                </div>
-              )}
-              {msg.content}
-            </div>
-
-            {/* بطاقات المصادر — لرسائل المساعد فقط */}
-            {msg.role === 'assistant' && (
-              <SourceChips sources={msg.sources} />
-            )}
-
-            {/* Action buttons for assistant messages */}
-            {msg.role === 'assistant' && (
-              <div style={{ display: 'flex', gap: 6, marginTop: 5, paddingRight: 4, alignItems: 'center' }}>
-                {/* TTS button */}
-                <button
-                  onClick={() => playTts(msg.content, i)}
-                  disabled={ttsLoading === i}
-                  style={{
-                    padding: '3px 6px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: playingTts === i ? '#5DCDA5' : '#6B7A8C',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 14,
-                    cursor: ttsLoading === i ? 'wait' : 'pointer',
-                    opacity: ttsLoading === i ? 0.5 : 1,
-                  }}
-                  title={playingTts === i ? 'إيقاف' : 'استمع'}
-                >
-                  {ttsLoading === i ? '⏳' : playingTts === i ? '🔇' : '🔊'}
-                </button>
-
-                {/* Save button */}
-                <button
-                  onClick={() => msg.savedId ? unsaveMessage(msg, i) : saveMessage(msg, i)}
-                  style={{
-                    padding: '3px 6px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: msg.savedId ? '#5DCDA5' : '#6B7A8C',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 14,
-                    cursor: 'pointer',
-                    transition: 'color 0.2s',
-                  }}
-                  title={msg.savedId ? 'إزالة الحفظ' : 'حفظ'}
-                >
-                  {msg.savedId ? '⭐' : '☆'}
-                </button>
-
-                {msg.time && (
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C' }}>
-                    {msg.time}
-                  </span>
-                )}
-              </div>
-            )}
-            {msg.role === 'user' && msg.time && (
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#6B7A8C', marginTop: 4, paddingLeft: 4 }}>
-                {msg.time}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Streaming indicator */}
-        {loading && (
-          streamingText ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <div
-                style={{
-                  maxWidth: '85%',
-                  padding: '13px 16px',
-                  fontSize: 15,
-                  lineHeight: 1.85,
-                  fontFamily: 'var(--font-body)',
-                  ...BUBBLE_ASSISTANT,
-                }}
-              >
-                {streamingText}
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 2,
-                    height: 14,
-                    background: '#5DCDA5',
-                    marginRight: 2,
-                    verticalAlign: 'middle',
-                    animation: 'blink 1s ease-in-out infinite',
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <TypingDots />
-          )
-        )}
-
-        {/* scrollMarginBottom keeps scrollIntoView from tucking the last message
-            under the fixed composer — it stops short by exactly its height. */}
-        <div ref={messagesEndRef} style={{ scrollMarginBottom: composerClearance }} />
-      </div>
+      {renderMessages('85%', { padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(240px, calc(100vh - 430px))', justifyContent: 'flex-end' })}
 
       {/* ─── Suggestions ─────────────────────────────────────────────────── */}
-      {suggestions.length > 0 && !loading && (
-        <div style={{ padding: '0 20px 10px', display: 'flex', gap: 6, overflowX: 'auto' }}>
-          {suggestions.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => { setSuggestions([]); sendMessage(s); }}
-              style={{
-                flexShrink: 0,
-                padding: '9px 15px', minHeight: 40,
-                background: 'rgba(255,255,255,.04)',
-                border: '1px solid rgba(255,255,255,.1)',
-                borderRadius: 18,
-                color: '#D2DAE6',
-                fontFamily: 'var(--font-body)',
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      {suggestionsEl}
 
       {/* ─── Spacer reserving flow space for the fixed composer below ─────── */}
       {/* The composer below is taken out of normal flow, so without this the
           page's real scrollable height wouldn't account for it — letting
           messages scroll into the space it visually covers. */}
       <div aria-hidden style={{ height: composerClearance }} />
+      </>
+      )}
+
+      {/* ─── Wide (desktop) two-column layout — opt-in, /chat only ────────── */}
+      {showWide && (
+        <div style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginRight: 'calc(50% - 50vw)' }}>
+          <div
+            style={{
+              maxWidth: 1200,
+              margin: '0 auto',
+              padding: '20px 24px 0',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              alignItems: 'flex-start',
+              gap: 28,
+            }}
+          >
+            {/* ── Sidebar ─────────────────────────────────────────────────── */}
+            <div
+              style={{
+                width: 240,
+                flexShrink: 0,
+                position: 'sticky',
+                top: 84,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 20,
+                maxHeight: 'calc(100vh - 104px)',
+              }}
+            >
+              {/* Top actions — history, new chat, switch back to portrait */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => router.push('/chat/history')}
+                  aria-label="محادثاتي السابقة"
+                  title="محادثاتي السابقة"
+                  style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)',
+                    color: '#A8B8C4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <path d="M12 6.04A9 9 0 006 3.75c-1.05 0-2.06.18-3 .5v14.25c.94-.32 1.95-.5 3-.5a9 9 0 016 2.29m0-14.25a9 9 0 016-2.29c1.05 0 2.06.18 3 .5v14.25a9 9 0 00-3-.5 9 9 0 00-6 2.29m0-14.25v14.25" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <button
+                  onClick={newChat}
+                  aria-label="محادثة جديدة"
+                  title="محادثة جديدة"
+                  style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: 'rgba(46,190,128,.1)', border: '1px solid rgba(46,190,128,.28)',
+                    color: '#5DCDA5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                  </svg>
+                </button>
+                <button
+                  onClick={toggleWideLayout}
+                  aria-label="العودة للتخطيط الافتراضي"
+                  aria-pressed={showWide}
+                  title="العودة للتخطيط الافتراضي"
+                  style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: 'rgba(46,190,128,.1)', border: '1px solid rgba(46,190,128,.28)',
+                    color: '#5DCDA5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <rect x="3" y="4" width="18" height="16" rx="3" />
+                    <path d="M9.5 4v16" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Companion identity */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8, paddingTop: 6 }}>
+                <div style={{ position: 'relative', width: 64, height: 64 }}>
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute', inset: -5, borderRadius: '50%',
+                      background: 'radial-gradient(circle, rgba(46,190,128,.35), transparent 70%)',
+                      animation: 'breathe 7s ease-in-out infinite',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'relative', width: 64, height: 64, borderRadius: '50%',
+                      background: 'linear-gradient(140deg, #2EBE80, #259696 55%, #376EC8)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 26,
+                      boxShadow: '0 6px 18px rgba(46,190,128,.25)',
+                    }}
+                  >
+                    {currentMode.icon}
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15, color: '#EAF2EE' }}>
+                  رفيقك في الرحلة
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, color: '#5DCDA5' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5DCDA5', boxShadow: '0 0 8px rgba(93,205,165,.7)' }} />
+                  هنا معك دائمًا
+                </div>
+              </div>
+
+              {/* Chat modes — vertical list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {CHAT_MODES.map((m) => {
+                  const active = m.id === modeId;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setModeId(m.id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 9,
+                        padding: '9px 12px', minHeight: 40,
+                        background: active ? 'rgba(46,190,128,.12)' : 'transparent',
+                        border: `1px solid ${active ? 'rgba(46,190,128,.35)' : 'rgba(255,255,255,.07)'}`,
+                        borderRadius: 12,
+                        color: active ? '#5DCDA5' : '#8A93A6',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 12.5,
+                        fontWeight: active ? 700 : 400,
+                        cursor: 'pointer',
+                        textAlign: 'right',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <span>{m.icon}</span>
+                      <span>{m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* من ذاكرتي — wraps naturally, never cut off */}
+              {memoryChips.length > 0 && (
+                <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11.5, color: '#3FB6B6', marginBottom: 8 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                      <path d="M12 3c-4.5 0-8 3.1-8 7 0 2.1 1 4 2.7 5.2L6 20l4.2-2.1c.6.1 1.2.1 1.8.1 4.5 0 8-3.1 8-7s-3.5-7-8-7z" strokeLinejoin="round" />
+                      <path d="M8.5 10h7M8.5 12.5h4" strokeLinecap="round" />
+                    </svg>
+                    من ذاكرتي
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {memoryChips.map((c, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          padding: '6px 11px', borderRadius: 11,
+                          background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+                          fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 11.5, color: '#B6BFCF',
+                        }}
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent sessions */}
+              {recentSessions.length > 0 && (
+                <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.05)' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11.5, color: '#6B7A8C', marginBottom: 8 }}>
+                    محادثات سابقة
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {recentSessions.map((s) => {
+                      const active = s.id === sessionId;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => openSession(s.id)}
+                          style={{
+                            textAlign: 'right',
+                            padding: '8px 10px',
+                            borderRadius: 10,
+                            background: active ? 'rgba(46,190,128,.1)' : 'rgba(255,255,255,.02)',
+                            border: `1px solid ${active ? 'rgba(46,190,128,.3)' : 'rgba(255,255,255,.05)'}`,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, color: active ? '#5DCDA5' : '#8A93A6', marginBottom: 3 }}>
+                            {sessionModeLabel(s.mode)}
+                          </div>
+                          {s.firstMessage && (
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-body)', fontSize: 11.5, color: '#8A93A6', lineHeight: 1.5,
+                                overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                              }}
+                            >
+                              {s.firstMessage}
+                            </div>
+                          )}
+                          <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#5A6478', marginTop: 3 }}>
+                            {sessionDateLabel(s.updatedAt)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Right column ────────────────────────────────────────────── */}
+            <div ref={rightColRef} style={{ flex: 1, minWidth: 0 }}>
+              {crisisBannerEl}
+              {checkinBannerEl}
+              {humanSupportRow}
+              {renderMessages('640px', { padding: '18px 0 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(280px, calc(100vh - 360px))', justifyContent: 'flex-end' })}
+              {suggestionsEl}
+              <div aria-hidden style={{ height: composerClearance }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Fixed input area ───────────────────────────────────────────── */}
+      {/* Position/width only differ in wide mode, to align under the measured
+          right column instead of the full viewport — the --composer-height
+          measurement (composerRef/ResizeObserver) below is untouched either way. */}
       <div
         ref={composerRef}
-        style={{
-          position: 'fixed', /* bottombar-ok: pinned directly above the bottom nav, mirrors BottomNav's fixed shell */
-          bottom: 'calc(var(--bottom-bar-height, 160px) + 14px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: 420,
-          zIndex: 20,
-          padding: '8px 20px 0',
-        }}
+        style={
+          showWide && wideComposerRect
+            ? {
+                position: 'fixed', /* bottombar-ok: pinned directly above the bottom nav, mirrors BottomNav's fixed shell */
+                bottom: 'calc(var(--bottom-bar-height, 160px) + 14px)',
+                left: wideComposerRect.left,
+                width: wideComposerRect.width,
+                zIndex: 20,
+                padding: '8px 0 0',
+              }
+            : {
+                position: 'fixed', /* bottombar-ok: pinned directly above the bottom nav, mirrors BottomNav's fixed shell */
+                bottom: 'calc(var(--bottom-bar-height, 160px) + 14px)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '100%',
+                maxWidth: 420,
+                zIndex: 20,
+                padding: '8px 20px 0',
+              }
+        }
       >
         {/* Slash command dropdown */}
         {slashOpen && filteredCmds.length > 0 && (
