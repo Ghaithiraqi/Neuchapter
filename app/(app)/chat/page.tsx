@@ -655,6 +655,21 @@ function ChatContent() {
   const [composerHeight, setComposerHeight] = useState(76);
   const composerClearance = `calc(var(--bottom-bar-height, 160px) + 14px + ${composerHeight}px)`;
 
+  // Anchors a short conversation to the bottom of the available space (the
+  // way every chat app behaves) without guessing at viewport-height minus
+  // header/banner constants — that arithmetic has to independently account
+  // for the NavBar, sticky header, banners, container padding, AND differs
+  // between the portrait/wide DOM shapes, which is exactly what kept
+  // drifting. Instead this measures ground truth: how far messagesContentRef
+  // (the real bubbles, intrinsic height) actually falls short of
+  // composerRef's real on-screen top, and inserts a filler of exactly that
+  // height above the content. A long conversation already exceeds that
+  // distance, so the filler clamps to 0 and normal document scrolling
+  // takes over — no nested scroll container involved.
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesContentRef = useRef<HTMLDivElement>(null);
+  const [contentFillerHeight, setContentFillerHeight] = useState(0);
+
   const currentMode = CHAT_MODES.find((m) => m.id === modeId) ?? CHAT_MODES[0];
 
   // ─── Scroll to bottom ────────────────────────────────────────────────────
@@ -770,6 +785,30 @@ function ChatContent() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Ground-truth bottom-anchoring for the message list (see contentFillerHeight
+  // above). Re-measures whenever content that could shift messagesContainerRef's
+  // position or messagesContentRef's intrinsic height changes; ResizeObserver
+  // on the content/composer elements catches everything else (banner
+  // popping in, dropdown opening, viewport resize reflowing the composer).
+  useEffect(() => {
+    const containerEl = messagesContainerRef.current;
+    const contentEl = messagesContentRef.current;
+    const composerEl = composerRef.current;
+    if (!containerEl || !contentEl || !composerEl) return;
+    const update = () => {
+      const containerTop = containerEl.getBoundingClientRect().top;
+      const composerTop = composerEl.getBoundingClientRect().top;
+      const naturalHeight = contentEl.offsetHeight;
+      setContentFillerHeight(Math.max(0, composerTop - containerTop - naturalHeight));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(contentEl);
+    ro.observe(composerEl);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, [showWide, messages, streamingText, restoring, sessionId]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -1062,7 +1101,11 @@ function ChatContent() {
   // streaming/TTS/save/source-chip behavior can never drift between them.
   // Only the bubble max-width and outer container styling differ.
   const renderMessages = (bubbleMaxWidth: number | string, containerStyle: React.CSSProperties) => (
-    <div style={containerStyle}>
+    <div ref={messagesContainerRef} style={containerStyle}>
+      {/* Ground-truth bottom anchor — see contentFillerHeight above. Clamps
+          to 0 once the conversation is long enough to need real scrolling. */}
+      <div aria-hidden style={{ height: contentFillerHeight }} />
+      <div ref={messagesContentRef} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {restoring && (
         <div style={{ textAlign: 'center', color: '#6B7A8C', fontSize: 12, fontFamily: 'var(--font-body)' }}>
           جاري استرجاع المحادثة...
@@ -1195,6 +1238,7 @@ function ChatContent() {
       {/* scrollMarginBottom keeps scrollIntoView from tucking the last message
           under the fixed composer — it stops short by exactly its height. */}
       <div ref={messagesEndRef} style={{ scrollMarginBottom: composerClearance }} />
+      </div>
     </div>
   );
 
@@ -1447,17 +1491,13 @@ function ChatContent() {
         )}
       </div>
 
-      {/* ─── Crisis banner — calm, never alarming ───────────────────────── */}
+      {/* ─── Crisis / check-in banners + human-support row ─────────────────── */}
       {crisisBannerEl}
-
-      {/* ─── Check-in banner ─────────────────────────────────────────────── */}
       {checkinBannerEl}
-
-      {/* ─── Human-support row — دائم، وليس فقط عند رصد أزمة ─────────────── */}
       {humanSupportRow}
 
       {/* ─── Messages ─────────────────────────────────────────────────────── */}
-      {renderMessages('85%', { padding: '18px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(240px, calc(100vh - 430px))', justifyContent: 'flex-end' })}
+      {renderMessages('85%', { padding: '18px 20px 8px', display: 'flex', flexDirection: 'column' })}
 
       {/* ─── Suggestions ─────────────────────────────────────────────────── */}
       {suggestionsEl}
@@ -1686,7 +1726,7 @@ function ChatContent() {
               {crisisBannerEl}
               {checkinBannerEl}
               {humanSupportRow}
-              {renderMessages('640px', { padding: '18px 0 8px', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 'max(280px, calc(100vh - 360px))', justifyContent: 'flex-end' })}
+              {renderMessages('640px', { padding: '18px 0 8px', display: 'flex', flexDirection: 'column' })}
               {suggestionsEl}
               <div aria-hidden style={{ height: composerClearance }} />
             </div>
